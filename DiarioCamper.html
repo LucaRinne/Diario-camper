@@ -378,14 +378,25 @@ function setSyncBadge(online){
 function connectFirebase(){
   var raw=document.getElementById("fb-config-input").value.trim();
   var cfg=null;
-  try {
-    // accetta sia oggetto puro sia con "firebaseConfig ="
-    var clean=raw.replace(/^\s*(?:var|const|let)?\s*\w+\s*=\s*/,"").replace(/;?\s*$/,"");
-    cfg=JSON.parse(clean);
-  } catch(e) {
-    alert("❌ JSON non valido. Controlla di aver copiato solo il blocco { ... }");return;
+  // Estrai solo il blocco { ... }
+  var m=raw.match(/\{[\s\S]*\}/);
+  if(!m){alert("\u274C Non trovo il blocco { ... }. Copia solo la parte tra parentesi graffe.");return;}
+  var block=m[0];
+  // Prova 1: JSON puro
+  try{cfg=JSON.parse(block);}catch(e1){
+    // Prova 2: JS object (chiavi senza virgolette) -> aggiungi virgolette
+    try{
+      var j=block.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g,'$1"$2":');
+      cfg=JSON.parse(j);
+    }catch(e2){
+      // Prova 3: eval sicuro
+      try{cfg=Function("return ("+block+")")();}
+      catch(e3){alert("\u274C Configurazione non valida. Prova a copiare di nuovo da Firebase scegliendo \'Configurazione\'.");return;}
+    }
   }
-  if(!cfg.databaseURL){alert("❌ Manca il campo 'databaseURL'. Assicurati di aver abilitato il Realtime Database nel progetto Firebase.");return;}
+  if(!cfg||!cfg.databaseURL){
+    alert("\u274C Manca databaseURL.\nAssicurati che il Realtime Database sia abilitato su Firebase Console.");return;
+  }
   localStorage.setItem("fb_config",JSON.stringify(cfg));
   initFirebase(cfg);
 }
