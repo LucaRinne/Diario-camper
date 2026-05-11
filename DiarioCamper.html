@@ -6,39 +6,44 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Diario Camper">
-<title>🚐 Diario Camper</title>
+<title>&#x1F690; Diario Camper</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
   --green:#2d6a4f;--green2:#40916c;--green3:#74c69d;--green-light:#d8f3dc;
-  --orange:#e76f51;--blue:#4895ef;--gray:#6c757d;--light:#f8f9fa;
-  --card:#ffffff;--border:#dee2e6;--text:#212529;--text2:#6c757d;
+  --orange:#e76f51;--blue:#4895ef;--gray:#6c757d;
+  --card:#fff;--border:#dee2e6;--text:#212529;--text2:#6c757d;
   --radius:12px;--shadow:0 2px 8px rgba(0,0,0,.12);
 }
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f0f4f0;color:var(--text);min-height:100vh;overflow-x:hidden;}
-.header{background:var(--green);color:#fff;padding:14px 16px 10px;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.2);}
-.header h1{font-size:1.1rem;font-weight:700;letter-spacing:.5px;}
-.header .sub{font-size:.75rem;opacity:.8;}
-.tabs{display:flex;background:#fff;border-bottom:2px solid var(--green3);position:sticky;top:54px;z-index:999;box-shadow:0 2px 6px rgba(0,0,0,.08);}
-.tab-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;font-size:.65rem;color:var(--gray);display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:500;transition:.2s;}
+.header{background:var(--green);color:#fff;padding:14px 16px 10px;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;justify-content:space-between;align-items:center;}
+.header h1{font-size:1.1rem;font-weight:700;}
+.sync-badge{font-size:.7rem;padding:3px 8px;border-radius:20px;font-weight:600;}
+.sync-ok{background:rgba(255,255,255,.2);color:#fff;}
+.sync-off{background:rgba(255,165,0,.3);color:#ffe;border:1px solid rgba(255,200,0,.4);}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--green3);position:sticky;top:52px;z-index:999;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.tab-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;font-size:.65rem;color:var(--gray);display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:500;}
 .tab-btn .icon{font-size:1.3rem;line-height:1;}
 .tab-btn.active{color:var(--green);border-bottom:2px solid var(--green);margin-bottom:-2px;}
 .section{display:none;padding:12px;padding-bottom:24px;}
 .section.active{display:block;}
-#map-section{display:none;padding:0;}
-#map-section.active{display:block;}
+#mappa-section{display:none;padding:0;}
+#mappa-section.active{display:block;}
 .card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--border);}
-.card-title{font-size:.95rem;font-weight:700;color:var(--green);margin-bottom:6px;}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s;}
+.card-title{font-size:.95rem;font-weight:700;color:var(--green);margin-bottom:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;}
 .btn-primary{background:var(--green);color:#fff;}
 .btn-secondary{background:var(--green-light);color:var(--green);}
 .btn-danger{background:#fee2e2;color:#dc2626;}
+.btn-firebase{background:#ff6d00;color:#fff;}
 .btn-sm{padding:6px 10px;font-size:.75rem;}
 .btn-full{width:100%;justify-content:center;}
 label{font-size:.78rem;font-weight:600;color:var(--text2);display:block;margin-bottom:3px;}
-input,select,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;color:var(--text);background:#fff;outline:none;transition:.2s;}
+input,select,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;color:var(--text);background:#fff;outline:none;}
 input:focus,select:focus,textarea:focus{border-color:var(--green2);box-shadow:0 0 0 3px rgba(64,145,108,.15);}
 textarea{resize:vertical;min-height:70px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
@@ -50,16 +55,12 @@ textarea{resize:vertical;min-height:70px;}
 .badge-park{background:#f3f4f6;color:#374151;}
 .badge-att{background:#ede9fe;color:#5b21b6;}
 .viaggio-item{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);border-left:4px solid var(--green);}
-.vi-info .vi-title{font-weight:700;font-size:.95rem;color:var(--text);}
-.vi-info .vi-dates{font-size:.75rem;color:var(--text2);margin-top:2px;}
-.vi-stats{text-align:right;}
-.vi-stats .stat{font-size:.7rem;color:var(--text2);}
-.vi-stats .stat strong{color:var(--green);display:block;font-size:.85rem;}
+.vi-title{font-weight:700;font-size:.95rem;}
+.vi-dates{font-size:.75rem;color:var(--text2);margin-top:2px;}
 .day-item{background:var(--card);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow);}
 .day-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--green-light);}
-.day-header .day-num{font-weight:700;color:var(--green);font-size:.9rem;}
-.day-header .day-date{font-size:.78rem;color:var(--text2);}
-.day-header .day-tot{font-size:.82rem;font-weight:700;color:var(--orange);}
+.day-num{font-weight:700;color:var(--green);font-size:.9rem;}
+.day-tot{font-size:.82rem;font-weight:700;color:var(--orange);}
 .day-body{padding:12px 14px;display:none;}
 .day-body.open{display:block;}
 .spese-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
@@ -72,21 +73,20 @@ textarea{resize:vertical;min-height:70px;}
 .map-filter.active{background:var(--green);color:#fff;border-color:var(--green);}
 .sosta-item{background:var(--card);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);border-left:3px solid var(--green3);}
 .sosta-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
-.sosta-nome{font-weight:700;font-size:.88rem;color:var(--text);}
+.sosta-nome{font-weight:700;font-size:.88rem;}
 .sosta-luogo{font-size:.75rem;color:var(--text2);margin-bottom:4px;}
 .sosta-info{font-size:.75rem;color:var(--text2);display:flex;flex-wrap:wrap;gap:8px;}
 .sosta-actions{display:flex;gap:6px;margin-top:8px;}
-.leaflet-popup-content{font-size:.82rem;min-width:180px;}
 .popup-title{font-weight:700;font-size:.9rem;color:var(--green);margin-bottom:4px;}
-.popup-info{color:#555;line-height:1.5;}
+.popup-info{color:#555;font-size:.82rem;line-height:1.5;}
 .popup-info a{color:var(--green2);text-decoration:none;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .stat-card{background:var(--card);border-radius:var(--radius);padding:12px;text-align:center;box-shadow:var(--shadow);}
-.stat-val{font-size:1.4rem;font-weight:800;color:var(--green);}
+.stat-val{font-size:1.3rem;font-weight:800;color:var(--green);}
 .stat-lbl{font-size:.72rem;color:var(--text2);margin-top:2px;}
 .search-box{position:relative;margin-bottom:10px;}
 .search-box input{padding-left:36px;}
-.search-box::before{content:"🔍";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.9rem;}
+.search-box::before{content:"&#x1F50D;";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.9rem;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:flex-end;}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:92vh;overflow-y:auto;}
@@ -97,117 +97,187 @@ textarea{resize:vertical;min-height:70px;}
 .totali-bar{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;border-radius:var(--radius);padding:14px;margin-bottom:12px;}
 .totali-bar .t-title{font-size:.75rem;opacity:.85;margin-bottom:2px;}
 .totali-bar .t-val{font-size:1.5rem;font-weight:800;}
-.totali-bar .t-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
-.totali-bar .t-item{text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:6px;}
-.totali-bar .t-item .v{font-size:1rem;font-weight:700;}
-.totali-bar .t-item .l{font-size:.65rem;opacity:.8;}
-.viaggio-selector{background:var(--card);border-radius:var(--radius);padding:12px;margin-bottom:10px;box-shadow:var(--shadow);}
-.viaggio-selector select{margin-top:6px;}
+.t-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px;}
+.t-item{text-align:center;background:rgba(255,255,255,.15);border-radius:8px;padding:6px;}
+.t-item .v{font-size:1rem;font-weight:700;}
+.t-item .l{font-size:.65rem;opacity:.8;}
 .chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
 .chip{padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--text);}
 .chip.active{background:var(--green);color:#fff;border-color:var(--green);}
 .gps-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;margin-top:6px;width:100%;justify-content:center;}
+.firebase-box{background:#fff3e0;border:1.5px solid #ff6d00;border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.firebase-box .fb-title{font-weight:700;color:#e65100;margin-bottom:6px;font-size:.9rem;}
+.firebase-box p{font-size:.8rem;color:#555;margin-bottom:8px;}
+.step-list{font-size:.8rem;color:var(--text);padding-left:16px;}
+.step-list li{margin-bottom:6px;line-height:1.5;}
+.step-list code{background:#f0f0f0;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:.78rem;}
+.sync-status{text-align:center;padding:8px;font-size:.78rem;border-radius:8px;margin-bottom:10px;}
+.sync-status.ok{background:#dcfce7;color:#166534;}
+.sync-status.offline{background:#fef3c7;color:#92400e;}
+.sync-status.error{background:#fee2e2;color:#dc2626;}
 </style>
 </head>
 <body>
-<div class="header"><h1>🚐 Diario Camper</h1><div class="sub">Il tuo diario di viaggio personale</div></div>
-<div class="tabs">
-  <button class="tab-btn active" onclick="showTab('viaggi')"><span class="icon">🗺️</span>Viaggi</button>
-  <button class="tab-btn" onclick="showTab('diario')"><span class="icon">📖</span>Diario</button>
-  <button class="tab-btn" onclick="showTab('mappa')"><span class="icon">📍</span>Mappa</button>
-  <button class="tab-btn" onclick="showTab('database')"><span class="icon">📋</span>Soste</button>
-  <button class="tab-btn" onclick="showTab('export')"><span class="icon">⚙️</span>Export</button>
+
+<div class="header">
+  <h1>&#x1F690; Diario Camper</h1>
+  <span class="sync-badge sync-off" id="sync-badge">&#x26A1; Offline</span>
 </div>
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('viaggi')"><span class="icon">&#x1F5FA;&#xFE0F;</span>Viaggi</button>
+  <button class="tab-btn" onclick="showTab('diario')"><span class="icon">&#x1F4D6;</span>Diario</button>
+  <button class="tab-btn" onclick="showTab('mappa')"><span class="icon">&#x1F4CD;</span>Mappa</button>
+  <button class="tab-btn" onclick="showTab('database')"><span class="icon">&#x1F4CB;</span>Soste</button>
+  <button class="tab-btn" onclick="showTab('impostazioni')"><span class="icon">&#x2699;&#xFE0F;</span>Setup</button>
+</div>
+
+<!-- VIAGGI -->
 <div id="viaggi-section" class="section active">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div><strong>I miei viaggi</strong><br><span style="font-size:.78rem;color:var(--text2)" id="n-viaggi"></span></div>
+    <div><strong>I miei viaggi</strong><br><span style="font-size:.78rem;color:var(--text2);" id="n-viaggi"></span></div>
     <button class="btn btn-primary btn-sm" onclick="openNewViaggio()">+ Nuovo Viaggio</button>
   </div>
   <div id="viaggi-list"></div>
 </div>
+
+<!-- DIARIO -->
 <div id="diario-section" class="section">
-  <div class="viaggio-selector"><label>📖 Viaggio selezionato</label>
-    <select id="diario-viaggio-sel" onchange="loadDiario()"><option value="">-- Seleziona un viaggio --</option></select>
+  <div class="card" style="padding:10px 12px;margin-bottom:10px;">
+    <label>&#x1F4D6; Viaggio selezionato</label>
+    <select id="diario-viaggio-sel" onchange="loadDiario()" style="margin-top:6px;">
+      <option value="">-- Seleziona un viaggio --</option>
+    </select>
   </div>
-  <div id="diario-content"><div class="empty"><span class="emoji">📖</span><p>Seleziona un viaggio per vedere il diario</p></div></div>
+  <div id="diario-content"><div class="empty"><span class="emoji">&#x1F4D6;</span><p>Seleziona un viaggio per vedere il diario</p></div></div>
 </div>
+
+<!-- MAPPA -->
 <div id="mappa-section" class="section" style="padding:0;">
-  <div class="map-toolbar" id="map-toolbar">
+  <div class="map-toolbar">
     <span style="font-size:.72rem;font-weight:700;color:var(--text2);">Filtra:</span>
     <button class="map-filter active" onclick="filterMap(this,'tutti')">Tutti</button>
-    <button class="map-filter" onclick="filterMap(this,'Campeggio')">⛺ Camp.</button>
-    <button class="map-filter" onclick="filterMap(this,'Area Sosta')">🅿️ Sosta</button>
-    <button class="map-filter" onclick="filterMap(this,'Area Attrezzata')">🔌 Att.</button>
-    <button class="map-filter" onclick="filterMap(this,'Parcheggio')">🚗 Park.</button>
-    <button class="map-filter" onclick="filterMap(this,'Agriturismo')">🌾 Agri.</button>
-    <button class="map-filter" onclick="filterMap(this,'gratis')">💚 Gratis</button>
-    <button class="map-filter" onclick="geolocate()">📍 Vicino a me</button>
+    <button class="map-filter" onclick="filterMap(this,'Campeggio')">&#x26FA; Camp.</button>
+    <button class="map-filter" onclick="filterMap(this,'Area Sosta')">&#x1F17F;&#xFE0F; Sosta</button>
+    <button class="map-filter" onclick="filterMap(this,'Area Attrezzata')">&#x1F50C; Att.</button>
+    <button class="map-filter" onclick="filterMap(this,'Parcheggio')">&#x1F697; Park.</button>
+    <button class="map-filter" onclick="filterMap(this,'Agriturismo')">&#x1F33E; Agri.</button>
+    <button class="map-filter" onclick="filterMap(this,'gratis')">&#x1F49A; Gratis</button>
+    <button class="map-filter" onclick="geolocate()">&#x1F4CD; Vicino a me</button>
   </div>
   <div id="map"></div>
 </div>
+
+<!-- DATABASE -->
 <div id="database-section" class="section">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <div><strong>Database Soste</strong><br><span style="font-size:.78rem;color:var(--text2)" id="n-soste"></span></div>
+    <div><strong>Database Soste</strong><br><span style="font-size:.78rem;color:var(--text2);" id="n-soste"></span></div>
     <button class="btn btn-primary btn-sm" onclick="openNuovaSosta()">+ Aggiungi</button>
   </div>
-  <div class="search-box"><input type="text" id="db-search" placeholder="Cerca città, nome, regione..." oninput="renderDB()"></div>
+  <div class="search-box"><input type="text" id="db-search" placeholder="Cerca citt&#xE0;, nome, regione..." oninput="renderDB()"></div>
   <div class="chip-group">
     <span class="chip active" onclick="setFilter(this,'')">Tutti</span>
-    <span class="chip" onclick="setFilter(this,'Italia')">🇮🇹 Italia</span>
-    <span class="chip" onclick="setFilter(this,'Francia')">🇫🇷 Francia</span>
-    <span class="chip" onclick="setFilter(this,'Germania')">🇩🇪 Germania</span>
-    <span class="chip" onclick="setFilter(this,'Olanda')">🇳🇱 Olanda</span>
-    <span class="chip" onclick="setFilter(this,'Norvegia')">🇳🇴 Norvegia</span>
-    <span class="chip" onclick="setFilter(this,'Svezia')">🇸🇪 Svezia</span>
-    <span class="chip" onclick="setFilter(this,'Altro')">🌍 Altro</span>
+    <span class="chip" onclick="setFilter(this,'Italia')">&#x1F1EE;&#x1F1F9; Italia</span>
+    <span class="chip" onclick="setFilter(this,'Francia')">&#x1F1EB;&#x1F1F7; Francia</span>
+    <span class="chip" onclick="setFilter(this,'Germania')">&#x1F1E9;&#x1F1EA; Germania</span>
+    <span class="chip" onclick="setFilter(this,'Olanda')">&#x1F1F3;&#x1F1F1; Olanda</span>
+    <span class="chip" onclick="setFilter(this,'Norvegia')">&#x1F1F3;&#x1F1F4; Norvegia</span>
+    <span class="chip" onclick="setFilter(this,'Svezia')">&#x1F1F8;&#x1F1EA; Svezia</span>
+    <span class="chip" onclick="setFilter(this,'Altro')">&#x1F30D; Altro</span>
   </div>
   <div id="db-list"></div>
 </div>
-<div id="export-section" class="section">
-  <div class="card"><div class="card-title">📊 Statistiche</div>
-    <div class="stat-grid" id="stats-grid" style="margin-top:10px;"></div>
+
+<!-- IMPOSTAZIONI / SETUP -->
+<div id="impostazioni-section" class="section">
+  <div id="sync-status-bar" class="sync-status offline">
+    &#x26A0;&#xFE0F; Modalit&#xE0; offline &mdash; i dati sono solo su questo dispositivo
   </div>
-  <div class="card"><div class="card-title">💾 Esporta in Excel/CSV</div>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px;">Scarica i tuoi dati da aprire in Excel.</p>
-    <button class="btn btn-primary btn-full" onclick="exportDiari()" style="margin-bottom:8px;">📥 Esporta tutti i Diari</button>
-    <button class="btn btn-secondary btn-full" onclick="exportDB()">📥 Esporta Database Soste</button>
+
+  <div class="firebase-box">
+    <div class="fb-title">&#x1F525; Configurazione Firebase (sincronizzazione famiglia)</div>
+    <p>Firebase &#xE8; un database gratuito di Google. Una volta configurato, <strong>tutti i tuoi dispositivi e la famiglia</strong> vedono gli stessi dati in tempo reale.</p>
+
+    <details style="margin-bottom:10px;">
+      <summary style="cursor:pointer;font-weight:600;font-size:.82rem;color:var(--green);">&#x1F4D6; Istruzioni passo-passo (5 minuti)</summary>
+      <ol class="step-list" style="margin-top:8px;">
+        <li>Vai su <strong>console.firebase.google.com</strong> (accedi con Google)</li>
+        <li>Clicca <strong>"Aggiungi progetto"</strong> &rarr; nome: <code>diario-camper</code> &rarr; continua fino a fine</li>
+        <li>Nel menu a sinistra: <strong>Build &rarr; Realtime Database &rarr; Create Database</strong></li>
+        <li>Scegli <strong>Start in test mode</strong> &rarr; Abilita</li>
+        <li>Nel menu a sinistra: <strong>Impostazioni progetto</strong> (icona &#x2699;&#xFE0F;) &rarr; scheda <strong>"Generale"</strong></li>
+        <li>Scorri fino a "Le tue app" &rarr; clicca <strong>&lt;/&gt;</strong> (Web) &rarr; dai un nome &rarr; <strong>Registra app</strong></li>
+        <li>Copia il blocco <code>firebaseConfig = { ... }</code> e incollalo qui sotto</li>
+        <li><strong>Condividi questa stessa configurazione</strong> con tutti i familiari: tutti useranno lo stesso database</li>
+      </ol>
+    </details>
+
+    <label>Incolla qui la tua configurazione Firebase:</label>
+    <textarea id="fb-config-input" style="font-family:monospace;font-size:.75rem;min-height:140px;" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "mio-progetto.firebaseapp.com",
+  "databaseURL": "https://mio-progetto-default-rtdb.firebaseio.com",
+  "projectId": "mio-progetto",
+  "storageBucket": "mio-progetto.appspot.com",
+  "messagingSenderId": "1234567890",
+  "appId": "1:123456:web:abc123"
+}'></textarea>
+    <button class="btn btn-firebase btn-full" onclick="connectFirebase()" style="margin-top:8px;">
+      &#x1F525; Connetti Firebase e sincronizza
+    </button>
+    <button class="btn btn-danger btn-sm btn-full" onclick="disconnectFirebase()" style="margin-top:6px;">
+      Scollega Firebase (torna offline)
+    </button>
   </div>
-  <div class="card"><div class="card-title">🗄️ Backup &amp; Ripristino</div>
-    <p style="font-size:.82rem;color:var(--text2);margin-bottom:12px;">Salva tutti i dati in JSON per non perderli.</p>
-    <button class="btn btn-primary btn-full" onclick="backupAll()" style="margin-bottom:8px;">💾 Backup Completo JSON</button>
+
+  <div class="card">
+    <div class="card-title">&#x1F4CA; Statistiche</div>
+    <div class="stat-grid" id="stats-grid" style="margin-top:8px;"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">&#x1F4E5; Esporta in Excel/CSV</div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px;">Scarica i tuoi dati da aprire in Excel.</p>
+    <button class="btn btn-primary btn-full" onclick="exportDiari()" style="margin-bottom:8px;">&#x1F4E5; Esporta tutti i Diari (CSV)</button>
+    <button class="btn btn-secondary btn-full" onclick="exportDB()">&#x1F4E5; Esporta Database Soste (CSV)</button>
+  </div>
+  <div class="card">
+    <div class="card-title">&#x1F5C4;&#xFE0F; Backup locale</div>
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:10px;">Salva una copia di tutti i dati in JSON.</p>
+    <button class="btn btn-primary btn-full" onclick="backupAll()" style="margin-bottom:8px;">&#x1F4BE; Salva Backup JSON</button>
     <label style="margin-top:8px;">Ripristina da backup:</label>
     <input type="file" id="restore-file" accept=".json" onchange="restoreAll(this)" style="font-size:.8rem;margin-top:4px;">
   </div>
 </div>
+
 <!-- MODAL NUOVO VIAGGIO -->
 <div class="modal-overlay" id="modal-viaggio">
   <div class="modal">
-    <div class="modal-title">Nuovo Viaggio <span class="modal-close" onclick="closeModal('modal-viaggio')">✕</span></div>
+    <div class="modal-title">Nuovo Viaggio <span class="modal-close" onclick="closeModal('modal-viaggio')">&#x2715;</span></div>
     <div class="form-group"><label>Destinazione / Nome Viaggio *</label><input id="v-dest" type="text" placeholder="es. Toscana 2025"></div>
     <div class="form-row">
       <div><label>Data Partenza *</label><input id="v-start" type="date"></div>
       <div><label>Data Rientro *</label><input id="v-end" type="date"></div>
     </div>
     <div class="form-row">
-      <div><label>Km Tachimetro Partenza</label><input id="v-km-start" type="number" placeholder="0"></div>
-      <div><label>Km Tachimetro Rientro</label><input id="v-km-end" type="number" placeholder="0"></div>
+      <div><label>Km Tachiometro Partenza</label><input id="v-km-start" type="number" placeholder="0"></div>
+      <div><label>Km Tachiometro Rientro</label><input id="v-km-end" type="number" placeholder="0"></div>
     </div>
-    <div class="form-group"><label>Note Viaggio</label><textarea id="v-note" placeholder="Meta, compagni, obiettivi..."></textarea></div>
-    <button class="btn btn-primary btn-full" onclick="saveViaggio()">✅ Crea Viaggio</button>
+    <div class="form-group"><label>Note</label><textarea id="v-note" placeholder="Meta, compagni, obiettivi..."></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="saveViaggio()">&#x2705; Crea Viaggio</button>
   </div>
 </div>
+
 <!-- MODAL GIORNO -->
 <div class="modal-overlay" id="modal-giorno">
   <div class="modal">
-    <div class="modal-title"><span id="modal-giorno-title">Giorno</span> <span class="modal-close" onclick="closeModal('modal-giorno')">✕</span></div>
+    <div class="modal-title"><span id="modal-giorno-title">Giorno</span> <span class="modal-close" onclick="closeModal('modal-giorno')">&#x2715;</span></div>
     <input type="hidden" id="g-vi"><input type="hidden" id="g-gi">
     <div class="form-row">
       <div><label>Km guidati</label><input id="g-km" type="number" placeholder="0" oninput="updateGTot()"></div>
       <div><label>Litri carburante</label><input id="g-litri" type="number" placeholder="0" step="0.1"></div>
     </div>
-    <div class="form-group"><label>Tratta (Da → A)</label><input id="g-tratta" type="text" placeholder="es. Roma → Firenze"></div>
+    <div class="form-group"><label>Tratta (Da &#x2192; A)</label><input id="g-tratta" type="text" placeholder="es. Roma &#x2192; Firenze"></div>
     <hr style="margin:10px 0;border-color:var(--border);">
-    <div class="card-title" style="margin-bottom:8px;">🏕️ Sosta Notturna</div>
+    <div class="card-title" style="margin-bottom:8px;">&#x26FA; Sosta Notturna</div>
     <div class="form-group"><label>Nome / Luogo Sosta</label><input id="g-sosta-nome" type="text" placeholder="es. Camping dei Pini, Area sosta..."></div>
     <div class="form-row">
       <div><label>Tipo Sosta</label>
@@ -216,51 +286,54 @@ textarea{resize:vertical;min-height:70px;}
           <option>Parcheggio</option><option>Agriturismo</option><option>Agricampeggio</option>
           <option>Punto Sosta</option><option>Altro</option></select>
       </div>
-      <div><label>Costo Sosta €</label><input id="g-sosta-costo" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div><label>Costo Sosta &#x20AC;</label><input id="g-sosta-costo" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
     </div>
     <div class="form-row">
-      <div><label>Valutazione (1-5 ★)</label>
-        <select id="g-sosta-voto"><option value="">--</option><option>1 ★</option><option>2 ★★</option><option>3 ★★★</option><option>4 ★★★★</option><option>5 ★★★★★</option></select>
+      <div><label>Valutazione (1-5 &#x2605;)</label>
+        <select id="g-sosta-voto"><option value="">--</option>
+          <option>1 &#x2605;</option><option>2 &#x2605;&#x2605;</option><option>3 &#x2605;&#x2605;&#x2605;</option>
+          <option>4 &#x2605;&#x2605;&#x2605;&#x2605;</option><option>5 &#x2605;&#x2605;&#x2605;&#x2605;&#x2605;</option></select>
       </div>
       <div><label>GPS Sosta</label><input id="g-sosta-gps" type="text" placeholder="lat, lon"></div>
     </div>
     <hr style="margin:10px 0;border-color:var(--border);">
-    <div class="card-title" style="margin-bottom:8px;">💶 Spese del Giorno</div>
+    <div class="card-title" style="margin-bottom:8px;">&#x1F4B6; Spese del Giorno</div>
     <div class="spese-grid">
-      <div class="spesa-item"><span class="spesa-label">⛽ Carburante</span><input class="spesa-input" id="g-carb" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
-      <div class="spesa-item"><span class="spesa-label">🛣️ Autostrada</span><input class="spesa-input" id="g-auto" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
-      <div class="spesa-item"><span class="spesa-label">🍽️ Pranzo</span><input class="spesa-input" id="g-pranzo" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
-      <div class="spesa-item"><span class="spesa-label">🍷 Cena</span><input class="spesa-input" id="g-cena" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
-      <div class="spesa-item"><span class="spesa-label">🛒 Spesa alim.</span><input class="spesa-input" id="g-spesa" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
-      <div class="spesa-item"><span class="spesa-label">🎁 Regali</span><input class="spesa-input" id="g-regali" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
-      <div class="spesa-item"><span class="spesa-label">📦 Varie</span><input class="spesa-input" id="g-varie" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x26FD; Carburante</span><input class="spesa-input" id="g-carb" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x1F6E3;&#xFE0F; Autostrada</span><input class="spesa-input" id="g-auto" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x1F37D;&#xFE0F; Pranzo</span><input class="spesa-input" id="g-pranzo" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x1F377; Cena</span><input class="spesa-input" id="g-cena" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x1F6D2; Spesa alim.</span><input class="spesa-input" id="g-spesa" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x1F381; Regali</span><input class="spesa-input" id="g-regali" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
+      <div class="spesa-item"><span class="spesa-label">&#x1F4E6; Varie</span><input class="spesa-input" id="g-varie" type="number" placeholder="0" step="0.5" oninput="updateGTot()"></div>
     </div>
     <div style="background:var(--green-light);border-radius:8px;padding:8px 12px;margin-top:10px;display:flex;justify-content:space-between;">
       <span style="font-size:.82rem;font-weight:700;color:var(--green);">Totale giorno:</span>
-      <span id="g-tot-display" style="font-size:1.1rem;font-weight:800;color:var(--green);">€ 0.00</span>
+      <span id="g-tot-display" style="font-size:1.1rem;font-weight:800;color:var(--green);">&#x20AC; 0.00</span>
     </div>
-    <div class="form-group" style="margin-top:10px;"><label>Note Giorno</label><textarea id="g-note" placeholder="Cosa hai fatto, luoghi visitati, impressioni..."></textarea></div>
-    <button class="btn btn-primary btn-full" onclick="saveGiorno()" style="margin-top:4px;">✅ Salva Giorno</button>
+    <div class="form-group" style="margin-top:10px;"><label>Note</label><textarea id="g-note" placeholder="Cosa hai fatto, luoghi visitati..."></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="saveGiorno()" style="margin-top:4px;">&#x2705; Salva Giorno</button>
   </div>
 </div>
+
 <!-- MODAL NUOVA SOSTA -->
 <div class="modal-overlay" id="modal-sosta">
   <div class="modal">
-    <div class="modal-title">Nuova Sosta <span class="modal-close" onclick="closeModal('modal-sosta')">✕</span></div>
+    <div class="modal-title">Nuova Sosta <span class="modal-close" onclick="closeModal('modal-sosta')">&#x2715;</span></div>
     <div class="form-row">
       <div><label>Nazione *</label><input id="s-naz" type="text" placeholder="Italia"></div>
       <div><label>Regione</label><input id="s-reg" type="text" placeholder="Toscana"></div>
     </div>
     <div class="form-row">
-      <div><label>Città *</label><input id="s-citta" type="text" placeholder="Firenze"></div>
+      <div><label>Citt&#xE0; *</label><input id="s-citta" type="text" placeholder="Firenze"></div>
       <div><label>Nome Sosta</label><input id="s-nome" type="text" placeholder="Camping..."></div>
     </div>
     <div class="form-group"><label>Indirizzo</label><input id="s-indirizzo" type="text" placeholder="Via..."></div>
     <div class="form-group"><label>GPS (lat, lon)</label><input id="s-gps" type="text" placeholder="es. 43.7228, 10.9028">
-      <button class="gps-btn" onclick="getCurrentGPS()">📍 Usa posizione attuale</button>
+      <button class="gps-btn" onclick="getCurrentGPS()">&#x1F4CD; Usa posizione attuale</button>
     </div>
     <div class="form-row">
-      <div><label>Costo</label><input id="s-costo" type="text" placeholder="es. 15€"></div>
+      <div><label>Costo</label><input id="s-costo" type="text" placeholder="es. 15&#x20AC;"></div>
       <div><label>Tipologia</label>
         <select id="s-tipo"><option>Campeggio</option><option>Area Sosta</option><option>Area Attrezzata</option>
           <option>Parcheggio</option><option>Agriturismo</option><option>Agricampeggio</option>
@@ -272,46 +345,158 @@ textarea{resize:vertical;min-height:70px;}
       <div><label>Telefono</label><input id="s-tel" type="tel" placeholder="+39..."></div>
     </div>
     <div class="form-group"><label>Note</label><textarea id="s-note" placeholder="Servizi, consigli..."></textarea></div>
-    <button class="btn btn-primary btn-full" onclick="saveNuovaSosta()">✅ Aggiungi al Database</button>
+    <button class="btn btn-primary btn-full" onclick="saveNuovaSosta()">&#x2705; Aggiungi al Database</button>
   </div>
 </div>
 <script>
 var SOSTE_DEFAULT=[{"id":1,"nazione":"Italia","regione":"Piemonte","citta":"Saluzzo","nome":"La Virginia","indirizzo":"Via valle Po 70","lat":null,"lon":null,"costo":"Gratis se si mangia da loro","tipologia":"Agriturismo","data":"10/03/2012","note":"","web":"www.lavirginia.it","mail":"","tel":"+390175259026"},{"id":2,"nazione":"Italia","regione":"Piemonte","citta":"Entracque","nome":"","indirizzo":"","lat":44.233333,"lon":7.3975,"costo":"Gratis","tipologia":"Area Attrezzata","data":"22/09/2012","note":"Svincolo prima del paese","web":"","mail":"","tel":""},{"id":3,"nazione":"Italia","regione":"Piemonte","citta":"Susa","nome":"","indirizzo":"Piazza Repubblica","lat":45.13884,"lon":7.05376,"costo":"Gratis con elettricità a consumo","tipologia":"Area Sosta","data":"30/05/2014","note":"Dormito nel parcheggio adiacente","web":"","mail":"","tel":""},{"id":4,"nazione":"Italia","regione":"Piemonte","citta":"Dormelletto","nome":"Camping Lago Azzurro","indirizzo":"Via Enrico Fermi 2","lat":null,"lon":null,"costo":"27€ con corrente","tipologia":"Campeggio","data":"27/05/2017","note":"Con spiaggia sul lago","web":"www.campinglagoazzurro.it","mail":"","tel":""},{"id":5,"nazione":"Italia","regione":"Piemonte","citta":"Orta san Giulio","nome":"Camping Orta","indirizzo":"Via Domodossola, 28","lat":null,"lon":null,"costo":"28€ con corrente","tipologia":"Campeggio","data":"28/05/2017","note":"Vista Lago","web":"www.campingorta.it","mail":"","tel":""},{"id":6,"nazione":"Italia","regione":"Piemonte","citta":"Orta san Giulio","nome":"","indirizzo":"Via Panoramica, 1B","lat":null,"lon":null,"costo":"20€ senza nulla","tipologia":"Parcheggio","data":"2021-02-07","note":"vicino alla camminata sul Lago","web":"","mail":"","tel":""},{"id":7,"nazione":"Italia","regione":"Piemonte","citta":"Mergozzo","nome":"","indirizzo":"prima del paese","lat":null,"lon":null,"costo":"10€ + 5€ corrente","tipologia":"Parcheggio","data":"2021-02-06","note":"Parcheggio vicino alla città","web":"","mail":"","tel":""},{"id":8,"nazione":"Italia","regione":"Piemonte","citta":"Canobbio","nome":"Area comunale","indirizzo":"Via S. Rocco","lat":null,"lon":null,"costo":"16€ al giorno con corrente","tipologia":"Area Sosta","data":"2021-02-20","note":"Sul lungo fiume","web":"","mail":"","tel":""},{"id":9,"nazione":"Italia","regione":"Piemonte","citta":"Nizza Monferrato","nome":"Area sosta Nizza","indirizzo":"Piazzale Pertini, 2","lat":null,"lon":null,"costo":"5€ carico, scarico e corrente","tipologia":"Area Attrezzata","data":"17/03/2018","note":"In citta","web":"","mail":"","tel":"388 065 3893"},{"id":10,"nazione":"Italia","regione":"Piemonte","citta":"Ceresole reale","nome":"Campeggio Casa Bianca","indirizzo":"","lat":null,"lon":null,"costo":"","tipologia":"Campeggio","data":"30/05/2020","note":"prima della diga","web":"","mail":"","tel":""},{"id":11,"nazione":"Italia","regione":"Piemonte","citta":"Paesana","nome":"Un Po di sosta","indirizzo":"Lungo Po Via Reinaud 36","lat":44.682733,"lon":7.270667,"costo":"","tipologia":"Area Sosta","data":"2020-09-26","note":"Immersa nel verde","web":"http://www.vallidelmonviso.it","mail":"info@unpodisosta.piemonte.it","tel":"335 8252960"},{"id":12,"nazione":"Italia","regione":"Piemonte","citta":"Castiglione Tinella","nome":"Ai Ciuvin","indirizzo":"STRADA MANZOTTI 3","lat":null,"lon":null,"costo":"25€ con piscina","tipologia":"Agriturismo","data":"2020-10-24","note":"con piscina","web":"http://www.agriciuvin.it","mail":"","tel":"333 6801248"},{"id":13,"nazione":"Italia","regione":"Piemonte","citta":"Barolo","nome":"Camping Sole e Langhe","indirizzo":"Via delle Viole Vergne CN","lat":null,"lon":null,"costo":"26.5€ tutto compreso","tipologia":"Agricampeggio","data":"2021-05-08","note":"Con piscina","web":"https://www.solelanghe.com","mail":"info@solelanghe.com","tel":""},{"id":14,"nazione":"Italia","regione":"Piemonte","citta":"Macugnaga","nome":"Area sosta Walter","indirizzo":"Centro Abitato Pecetto 129","lat":null,"lon":null,"costo":"12€ + 5€ corrente","tipologia":"Parcheggio","data":"2022-10-29","note":"parcheggio nella pista di pattinaggio","web":"","mail":"","tel":"348 032 1972"},{"id":15,"nazione":"Italia","regione":"Piemonte","citta":"La Morra","nome":"Area sosta il Laghetto","indirizzo":"Via del Laghetto 7","lat":null,"lon":null,"costo":"12€ 24h con corrente","tipologia":"Area Sosta","data":"2022-11-19","note":"Area sosta vicino a La morra","web":"","mail":"","tel":"327 544 1063"},{"id":16,"nazione":"Italia","regione":"Piemonte","citta":"Santa Vittoria d'Alba","nome":"Az. Agricola Fratelli Rabino","indirizzo":"Via Rolfi 5","lat":null,"lon":null,"costo":"50€ per 4 giorni","tipologia":"Agriturismo","data":"2022-12-08","note":"A metà strada tra Bra e Alba","web":"https://www.fratellirabino.com","mail":"","tel":"0172 478045"},{"id":17,"nazione":"Italia","regione":"Piemonte","citta":"Canobbio","nome":"Parcheggio Camelie","indirizzo":"Casal Massarecci 7","lat":null,"lon":null,"costo":"20€ al giorno","tipologia":"Area Sosta","data":"2023-10-22","note":"Sul lungo fiume","web":"www.parcheggiodellecamelie.it","mail":"info@parcheggiodellecamelie.it","tel":"3398316479"},{"id":18,"nazione":"Italia","regione":"Piemonte","citta":"Ovada","nome":"","indirizzo":"Via Antonio Gramsci 2","lat":null,"lon":null,"costo":"Gratis con carico e scarico","tipologia":"Parcheggio","data":"2024-01-06","note":"vicino al fiume","web":"","mail":"","tel":""},{"id":19,"nazione":"Italia","regione":"Piemonte","citta":"Montegrosso","nome":"","indirizzo":"Via Asti Mare 23","lat":44.8186,"lon":8.2301,"costo":"Gratis con elettricità","tipologia":"Area Attrezzata","data":"2024-10-31","note":"Semplice con corrente gratis","web":"","mail":"","tel":""},{"id":20,"nazione":"Italia","regione":"Piemonte","citta":"Ivrea","nome":"","indirizzo":"Via Dora Baltea 3","lat":45.4633,"lon":7.8761,"costo":"Gratis con donazione","tipologia":"Area Attrezzata","data":"2025-01-25","note":"comodo per la città","web":"","mail":"","tel":""},{"id":21,"nazione":"Italia","regione":"Piemonte","citta":"Viverone","nome":"Camping internazionale al sole","indirizzo":"Via Casale Comuna 45","lat":null,"lon":null,"costo":"","tipologia":"Campeggio","data":"05/04/2025","note":"carino sul lago","web":"https://www.campeggiodelsole.com","mail":"info@campeggiodelsole.com","tel":"39 0161 98169"},{"id":22,"nazione":"Italia","regione":"Valle d'Aosta","citta":"Cogne","nome":"Cogne Revettaz","indirizzo":"","lat":45.6084,"lon":7.3583,"costo":"8.70€ inverno / 10.50€ estate","tipologia":"Area Attrezzata","data":"25/01/2014","note":"In paese sulle piste da sci","web":"","mail":"gp88s@hotmail.it","tel":"+393289036422"},{"id":23,"nazione":"Italia","regione":"Valle d'Aosta","citta":"Valnontey","nome":"Lo Stambecco","indirizzo":"Frazione Valnontey 6","lat":null,"lon":null,"costo":"27€","tipologia":"Campeggio","data":"2020-07-12","note":"Pagamento in contanti","web":"http://www.campeggiolostambecco.it","mail":"","tel":"39 0165 74152"},{"id":24,"nazione":"Italia","regione":"Valle d'Aosta","citta":"Courmayeur","nome":"Grandes Jorasses","indirizzo":"Via per la Val Ferret 53","lat":null,"lon":null,"costo":"24€","tipologia":"Campeggio","data":"2020-07-19","note":"Navetta gratuita","web":"http://www.grandesjorasses.com","mail":"","tel":"3511500635"},{"id":25,"nazione":"Italia","regione":"Valle d'Aosta","citta":"Brusson","nome":"","indirizzo":"","lat":45.766183,"lon":7.711167,"costo":"10€ al giorno","tipologia":"Area Sosta","data":"30/06/2012","note":"A 5 min dal centro no elettricità","web":"","mail":"","tel":""},{"id":26,"nazione":"Italia","regione":"Valle d'Aosta","citta":"La Thuile","nome":"Area Azzurra","indirizzo":"Località Villaret","lat":45.70867,"lon":6.95306,"costo":"12€ + 3€ corrente","tipologia":"Area Sosta","data":"14/11/2015","note":"","web":"www.azzurracamper.com","mail":"info@azzurracamper.com","tel":"3483535048"},{"id":27,"nazione":"Italia","regione":"Valle d'Aosta","citta":"Etroubles","nome":"Camping Tunnel International","indirizzo":"Rue Chevrières 4","lat":null,"lon":null,"costo":"34€ luglio","tipologia":"Campeggio","data":"2023-07-16","note":"","web":"https://www.campingtunnel.it","mail":"info@campingtunnel.it","tel":"0165 78292"},{"id":28,"nazione":"Italia","regione":"Toscana","citta":"Torrita di Siena","nome":"","indirizzo":"Via di Cilano SP 135b","lat":43.16445,"lon":11.771867,"costo":"Gratuita","tipologia":"Area Attrezzata","data":"06/04/2012","note":"Con elettricità gratuita","web":"","mail":"","tel":""},{"id":29,"nazione":"Italia","regione":"Toscana","citta":"Arezzo","nome":"","indirizzo":"Via P. da Palestrina","lat":43.472167,"lon":11.887667,"costo":"0.80€/h o 8€/24h","tipologia":"Area Sosta","data":"06/04/2012","note":"A 15 min dal centro","web":"","mail":"","tel":""},{"id":30,"nazione":"Italia","regione":"Toscana","citta":"Arezzo","nome":"","indirizzo":"Via Tarlati","lat":null,"lon":null,"costo":"Gratuita","tipologia":"Parcheggio","data":"2021-10-31","note":"Senza nulla","web":"","mail":"","tel":""},{"id":31,"nazione":"Italia","regione":"Toscana","citta":"Anghiari","nome":"Val della Pieve","indirizzo":"Via della fossa 8","lat":null,"lon":null,"costo":"12€ + 3€ elettricità","tipologia":"Agriturismo","data":"07/04/2012","note":"10 min dalla città","web":"www.agriturismovaldellapieve.it","mail":"info@agriturismovaldellapieve.it","tel":"+390575788593"},{"id":32,"nazione":"Italia","regione":"Toscana","citta":"Pienza","nome":"","indirizzo":"","lat":43.077983,"lon":11.680867,"costo":"Strisce blu","tipologia":"Punto Sosta","data":"24/04/2013","note":"Dietro le mura","web":"","mail":"","tel":""},{"id":33,"nazione":"Italia","regione":"Toscana","citta":"Montepulciano","nome":"","indirizzo":"","lat":43.096417,"lon":11.787033,"costo":"10€ al giorno","tipologia":"Area Sosta","data":"24/08/2012","note":"Sul retro caserma VVF","web":"","mail":"","tel":""},{"id":34,"nazione":"Italia","regione":"Toscana","citta":"Montepulciano","nome":"La Buca Vecchia","indirizzo":"Via per Pienza 38","lat":null,"lon":null,"costo":"25€ al giorno","tipologia":"Agricampeggio","data":"2021-10-31","note":"","web":"Az. La Buca Vecchia","mail":"info@labucavecchia.it","tel":"+39 333 3371801"},{"id":35,"nazione":"Italia","regione":"Toscana","citta":"Marina di Massa","nome":"Camping la Partaccia 2","indirizzo":"Via delle Pinete 394","lat":null,"lon":null,"costo":"25€ bassa stagione","tipologia":"Campeggio","data":"13/09/2014","note":"","web":"","mail":"","tel":""},{"id":36,"nazione":"Italia","regione":"Toscana","citta":"Marina di Massa","nome":"Camping Luna","indirizzo":"Via delle Pinete 392","lat":null,"lon":null,"costo":"33€ a giugno","tipologia":"Campeggio","data":"12/06/2020","note":"Comodo per la spiaggia","web":"","mail":"","tel":""},{"id":37,"nazione":"Italia","regione":"Toscana","citta":"Volterra","nome":"Parcheggio P3","indirizzo":"Viale dei Filosofi","lat":null,"lon":null,"costo":"10€ al giorno","tipologia":"Parcheggio","data":"08/12/2015","note":"Solo acque grigie","web":"","mail":"","tel":""},{"id":38,"nazione":"Italia","regione":"Toscana","citta":"Monteriggioni","nome":"","indirizzo":"Via Cassia Nord","lat":43.385717,"lon":11.22845,"costo":"4€ carico e scarico","tipologia":"Area Sosta","data":"31/10/2016","note":"Area vicino alla città","web":"","mail":"","tel":""},{"id":39,"nazione":"Italia","regione":"Toscana","citta":"Montalcino","nome":"La Crociona","indirizzo":"","lat":43.038717,"lon":11.50305,"costo":"Raduno","tipologia":"Parcheggio","data":"01/11/2016","note":"Scarico acque nere","web":"","mail":"","tel":""},{"id":40,"nazione":"Italia","regione":"Toscana","citta":"Monteroni d'Arbia","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"01/11/2016","note":"Carico e scarico","web":"","mail":"","tel":""},{"id":41,"nazione":"Italia","regione":"Toscana","citta":"Lucca","nome":"Area sosta Comunale","indirizzo":"","lat":null,"lon":null,"costo":"10€ al giorno","tipologia":"Area Sosta","data":"10/03/2017","note":"Senza corrente","web":"","mail":"","tel":""},{"id":42,"nazione":"Italia","regione":"Toscana","citta":"San Gimignano","nome":"Area sosta Santa Chiara","indirizzo":"Via di Castel S. Gimignano","lat":null,"lon":null,"costo":"22€ con carico e scarico","tipologia":"Area Sosta","data":"04/01/2018","note":"Navetta per il paese","web":"","mail":"","tel":""},{"id":43,"nazione":"Italia","regione":"Toscana","citta":"Orbetello","nome":"Ai Delfini","indirizzo":"Via Aurelia km 151/5","lat":null,"lon":null,"costo":"1€/h","tipologia":"Area Sosta","data":"2021-09-02","note":"Grande parcheggio","web":"https://www.aidelfini.it","mail":"info@aidelfini.it","tel":"389 9270263"},{"id":44,"nazione":"Italia","regione":"Toscana","citta":"San Gimignano","nome":"Area S. Lucia","indirizzo":"Strada Comunale S. Lucia 43","lat":null,"lon":null,"costo":"","tipologia":"Parcheggio","data":"2021-10-29","note":"Pullman gratuito","web":"","mail":"","tel":""},{"id":45,"nazione":"Italia","regione":"Toscana","citta":"Certaldo","nome":"Poggio ai Pini","indirizzo":"Loc. Aia Murata SP 50","lat":null,"lon":null,"costo":"28€ tutto compreso","tipologia":"Agricampeggio","data":"2021-10-29","note":"Aperto tutto l'anno","web":"http://www.poggioaipini.it","mail":"info@poggioaipini.it","tel":"389 9564156"},{"id":46,"nazione":"Italia","regione":"Toscana","citta":"Siena","nome":"Area Fagiolone","indirizzo":"Via Esterna Fontebranda","lat":null,"lon":null,"costo":"20€","tipologia":"Parcheggio","data":"2021-10-30","note":"Pochi posti","web":"https://www.sienaparcheggi.com","mail":"si.park@sienaparcheggi.com","tel":"0577228787"},{"id":47,"nazione":"Italia","regione":"Toscana","citta":"Marina di Bibbona","nome":"Area sosta camper","indirizzo":"Via dei Cipressi 11","lat":43.248733,"lon":10.53415,"costo":"15€ con corrente","tipologia":"Area Sosta","data":"2023-10-29","note":"1 km dal mare","web":"","mail":"","tel":"3683044207"},{"id":48,"nazione":"Italia","regione":"Toscana","citta":"Castellina in Chianti","nome":"Parcheggio","indirizzo":"SR 222 Chiantigiana","lat":null,"lon":null,"costo":"15€ corrente gratuita","tipologia":"Parcheggio","data":"29/05/2025","note":"200m dal paese","web":"","mail":"","tel":""},{"id":49,"nazione":"Italia","regione":"Toscana","citta":"Alberese","nome":"Alberese Camper Park","indirizzo":"Via dei Bersaglieri 1 Grosseto","lat":null,"lon":null,"costo":"20€ con corrente","tipologia":"Area Sosta","data":"2023-12-06","note":"vicino al Paese","web":"","mail":"","tel":""},{"id":50,"nazione":"Italia","regione":"Toscana","citta":"Pitigliano","nome":"Parcheggio Piazza Nenni","indirizzo":"Piazza Nenni","lat":null,"lon":null,"costo":"2.5€/h","tipologia":"Parcheggio","data":"2023-12-07","note":"1 km dal centro","web":"","mail":"","tel":""},{"id":51,"nazione":"Italia","regione":"Toscana","citta":"Grosseto","nome":"Area Camper 51","indirizzo":"Via Aurelia Antica","lat":42.747,"lon":11.11,"costo":"20€","tipologia":"Area Sosta","data":"2023-12-08","note":"20 min dal centro","web":"","mail":"","tel":"3773947166"},{"id":52,"nazione":"Italia","regione":"Toscana","citta":"Radicofani","nome":"","indirizzo":"Via A. de Gasperi","lat":42.8947,"lon":11.775,"costo":"Gratis","tipologia":"Parcheggio","data":"2024-01-28","note":"10 min dal centro","web":"","mail":"","tel":""},{"id":53,"nazione":"Italia","regione":"Toscana","citta":"Siena","nome":"Il Sambuco","indirizzo":"","lat":null,"lon":null,"costo":"28€ tutto compreso","tipologia":"Agricampeggio","data":"2025-05-31","note":"","web":"","mail":"","tel":""},{"id":54,"nazione":"Italia","regione":"Lazio","citta":"Orvieto","nome":"","indirizzo":"Via della direttissima","lat":42.7256,"lon":12.126717,"costo":"18€ per 24h","tipologia":"Area Attrezzata","data":"25/04/2012","note":"vicino funicolare","web":"","mail":"","tel":""},{"id":55,"nazione":"Italia","regione":"Lazio","citta":"Latina","nome":"Museo Piana delle Orme","indirizzo":"Strada Migliara 43.5","lat":41.4444,"lon":12.9849,"costo":"Gratuito","tipologia":"Parcheggio","data":"07/12/2015","note":"Carico e scarico","web":"","mail":"","tel":""},{"id":56,"nazione":"Italia","regione":"Lazio","citta":"Priverno","nome":"","indirizzo":"Via San Tommaso d'Aquino 1","lat":null,"lon":null,"costo":"Gratuito","tipologia":"Parcheggio","data":"08/12/2015","note":"Parcheggio abbazia","web":"www.abbaziadifossanova.it","mail":"","tel":""},{"id":57,"nazione":"Italia","regione":"Lazio","citta":"Tarquinia","nome":"Agriturismo il Poderino","indirizzo":"Strada del Poderino 98","lat":42.250713,"lon":11.737939,"costo":"10€ al giorno","tipologia":"Area Sosta","data":"26/12/2006","note":"Con corrente e acqua","web":"https://agriturismopoderino.wixsite.com","mail":"","tel":""},{"id":58,"nazione":"Italia","regione":"Lombardia","citta":"Sirmione","nome":"","indirizzo":"Via Verona","lat":45.4644,"lon":10.59405,"costo":"A pagamento","tipologia":"Parcheggio","data":"16/05/2013","note":"Nei pressi del centro","web":"","mail":"","tel":""},{"id":59,"nazione":"Italia","regione":"Lombardia","citta":"Baveno","nome":"Camping Villa Parisi","indirizzo":"Via Piave 50","lat":null,"lon":null,"costo":"23€ al giorno","tipologia":"Campeggio","data":"23/03/2012","note":"Senza riscaldamento bagni","web":"www.campingparisi.it","mail":"santpir@gmail.com","tel":"+390323923156"},{"id":60,"nazione":"Italia","regione":"Lombardia","citta":"Desenzano sul Garda","nome":"Camping San Francesco","indirizzo":"Strada Vicinale San Francesco","lat":null,"lon":null,"costo":"26€ con luce","tipologia":"Campeggio","data":"26/09/2015","note":"Tra Desenzano e Sirmione","web":"www.campingsanfrancesco.com","mail":"moreinfo@campingsanfrancesco.com","tel":"0309110245"},{"id":61,"nazione":"Italia","regione":"Lombardia","citta":"Morbegno","nome":"Area sosta Morbegno","indirizzo":"Via del Foss","lat":46.144191,"lon":9.575003,"costo":"12€ con corrente","tipologia":"Area Attrezzata","data":"17/10/2015","note":"","web":"area-sosta-camper-morbegno.oneminutesite.it","mail":"areasostacampermorbegno@gmail.com","tel":"3343076643"},{"id":62,"nazione":"Italia","regione":"Lombardia","citta":"Tavernola","nome":"Area sosta Tavernola","indirizzo":"Via Brennero","lat":45.835,"lon":9.061117,"costo":"5€ + 2.5€ scarico","tipologia":"Area Attrezzata","data":"31/10/2017","note":"si può sostare fuori se pieno","web":"","mail":"","tel":""},{"id":63,"nazione":"Italia","regione":"Lombardia","citta":"Bergamo","nome":"Area camper Bergamo","indirizzo":"Via F. Corridoni 123","lat":45.71345,"lon":9.702422,"costo":"18€ per 24h con corrente","tipologia":"Area Attrezzata","data":"30/03/2018","note":"Vicino tram","web":"www.areacamperbergamo.it","mail":"","tel":"035 342468"},{"id":64,"nazione":"Italia","regione":"Lombardia","citta":"Iseo","nome":"Camping Sassabanek","indirizzo":"Via Colombera 2","lat":null,"lon":null,"costo":"20€ con corrente","tipologia":"Campeggio","data":"31/03/2017","note":"15 min a piedi","web":"www.sassabanek.it","mail":"","tel":"030 980 300"},{"id":65,"nazione":"Italia","regione":"Lombardia","citta":"Mantova","nome":"Area Sparafucile","indirizzo":"Via Legnago 1","lat":45.1634,"lon":10.81257,"costo":"15€ con tutto","tipologia":"Area Attrezzata","data":"2020-06-13","note":"10 min dal centro","web":"","mail":"","tel":""},{"id":66,"nazione":"Italia","regione":"Lombardia","citta":"San Benedetto Po","nome":"Bugno Martino","indirizzo":"Via Zottole 93","lat":null,"lon":null,"costo":"Gratuito con tessera","tipologia":"Parcheggio","data":"2020-07-02","note":"Cantina Lambrusco biologico","web":"https://bugnomartino.com","mail":"","tel":"3494034138"},{"id":67,"nazione":"Italia","regione":"Lombardia","citta":"Pieve di Coriano","nome":"Argine Po","indirizzo":"Parcheggio attracco fluviale","lat":null,"lon":null,"costo":"Gratuito con carico acqua","tipologia":"Parcheggio","data":"14/06/2020","note":"Gratuito con carico acqua","web":"","mail":"","tel":""},{"id":68,"nazione":"Italia","regione":"Lombardia","citta":"Gavirate","nome":"","indirizzo":"Via Cavour 51","lat":null,"lon":null,"costo":"16€ al giorno","tipologia":"Area Sosta","data":"2023-11-19","note":"Sulla pista ciclabile sul lago","web":"","mail":"","tel":""},{"id":69,"nazione":"Italia","regione":"Veneto","citta":"Lazise","nome":"Agricampeggio Oasi del Garda","indirizzo":"Località Casa Pace 9","lat":null,"lon":null,"costo":"55€","tipologia":"Campeggio","data":"2020-06-29","note":"Bagno privato piscina","web":"https://www.campingoasidelgarda.com","mail":"info@campingoasidelgarda.com","tel":"+393492571602"},{"id":70,"nazione":"Italia","regione":"Veneto","citta":"Castemassa","nome":"","indirizzo":"Via Argine Po 19","lat":null,"lon":null,"costo":"Gratuito","tipologia":"Parcheggio","data":"15/06/2020","note":"Sull'argine del Po","web":"","mail":"","tel":""},{"id":71,"nazione":"Italia","regione":"Veneto","citta":"Oriago - Venezia","nome":"Il girasole","indirizzo":"Via Marostica","lat":null,"lon":null,"costo":"25€ al giorno","tipologia":"Agriturismo","data":"31/10/2013","note":"","web":"www.agrilgirasole.com","mail":"agrilgirasole@alice.it","tel":"+393381009573"},{"id":72,"nazione":"Italia","regione":"Veneto","citta":"Venezia","nome":"Camping La Fusina","indirizzo":"Via Moranzani","lat":null,"lon":null,"costo":"25.40€ con tutto","tipologia":"Campeggio","data":"2020-08-11","note":"Traghetto per Venezia","web":"","mail":"","tel":""},{"id":73,"nazione":"Italia","regione":"Veneto","citta":"Garda","nome":"","indirizzo":"Via Brione 200","lat":45.879533,"lon":10.8589,"costo":"1€/h solo monete","tipologia":"Area Attrezzata","data":"10/05/2013","note":"15 min dal centro","web":"","mail":"","tel":""},{"id":74,"nazione":"Italia","regione":"Veneto","citta":"Feltre","nome":"","indirizzo":"Viale A. Gaggia","lat":46.019967,"lon":11.907967,"costo":"Gratuita","tipologia":"Area Attrezzata","data":"01/05/2014","note":"Con acqua e elettricità","web":"","mail":"","tel":""},{"id":75,"nazione":"Italia","regione":"Veneto","citta":"Belluno","nome":"","indirizzo":"Via Dino Buzzati","lat":46.136367,"lon":12.20885,"costo":"A pagamento","tipologia":"Parcheggio","data":"01/05/2014","note":"Scarico nelle vicinanze","web":"","mail":"","tel":""},{"id":76,"nazione":"Italia","regione":"Veneto","citta":"Eraclea","nome":"Al Doge","indirizzo":"Via coda del Gatto 51","lat":45.59892,"lon":12.64707,"costo":"","tipologia":"Agriturismo","data":"01/05/2014","note":"Gratis se si mangia","web":"","mail":"","tel":""},{"id":77,"nazione":"Italia","regione":"Veneto","citta":"Raffa di Soligo","nome":"Cantina Segio Moro","indirizzo":"Via Crede 10","lat":null,"lon":null,"costo":"","tipologia":"Agriturismo","data":"2020-08-07","note":"Prosecco Valdobbiadene","web":"","mail":"","tel":""},{"id":78,"nazione":"Italia","regione":"Veneto","citta":"Caorle","nome":"Camping Laguna","indirizzo":"","lat":null,"lon":null,"costo":"","tipologia":"Campeggio","data":"2020-08-08","note":"In bici fino a Eraclea","web":"","mail":"","tel":""},{"id":79,"nazione":"Italia","regione":"Emilia Romagna","citta":"Sanguinaro","nome":"Ciao Latte","indirizzo":"Via Muroni 28","lat":44.830767,"lon":10.1299,"costo":"Gratis","tipologia":"Agriturismo","data":"05/10/2013","note":"Fare il parmigiano","web":"www.ciaolatte.it","mail":"ciaolatte@libero.it","tel":"0521624035"},{"id":80,"nazione":"Italia","regione":"Emilia Romagna","citta":"Carpaneto Piacentino","nome":"Poggio Caminata","indirizzo":"Via Bariana 48","lat":44.873789,"lon":9.74066,"costo":"38€ con cena","tipologia":"Agriturismo","data":"25/04/2014","note":"Nelle colline piacentine","web":"www.poggiocaminata.it","mail":"prenotazioni@poggiocaminata.it","tel":"0523850342"},{"id":81,"nazione":"Italia","regione":"Emilia Romagna","citta":"Langhirano","nome":"La Baldina","indirizzo":"Via la baldina Casatico","lat":44.65895,"lon":10.26144,"costo":"","tipologia":"Agriturismo","data":"14/09/2014","note":"","web":"","mail":"","tel":"0521355166"},{"id":82,"nazione":"Italia","regione":"Emilia Romagna","citta":"Berceto","nome":"","indirizzo":"Via Salas","lat":44.511361,"lon":9.986257,"costo":"5€ carico scarico corrente","tipologia":"Area Attrezzata","data":"09/11/2019","note":"In paese","web":"","mail":"","tel":""},{"id":83,"nazione":"Italia","regione":"Emilia Romagna","citta":"San Marino","nome":"","indirizzo":"Parcheggio P10","lat":null,"lon":null,"costo":"Gratis 20-8 poi 1.20€/h","tipologia":"Parcheggio","data":"11/12/2016","note":"In pendenza vicino ascensori","web":"","mail":"","tel":""},{"id":84,"nazione":"Italia","regione":"Emilia Romagna","citta":"Modena","nome":"Camper Club Mutina","indirizzo":"S.da Collegarola 76/A","lat":44.614,"lon":10.944,"costo":"20€ con tutto","tipologia":"Area Attrezzata","data":"2024-11-01","note":"Ottima ma lontano dal centro","web":"https://www.camperclubmutina.it","mail":"","tel":"335 427561"},{"id":85,"nazione":"Italia","regione":"Emilia Romagna","citta":"Faenza","nome":"Agriturismo Fondo Riso","indirizzo":"Via Ravegnana 124","lat":null,"lon":null,"costo":"15€ + tassa soggiorno","tipologia":"Area Attrezzata","data":"2024-12-08","note":"Vicino alla città","web":"","mail":"","tel":"3495146946"},{"id":86,"nazione":"Italia","regione":"Sardegna","citta":"Alghero","nome":"I platani","indirizzo":"SS 291 km 32+500","lat":40.606667,"lon":8.208333,"costo":"23€ al giorno","tipologia":"Area Attrezzata","data":"2013-08-01","note":"Navetta per spiagge","web":"www.iplatani.it","mail":"info@iplatani.it","tel":"+393381861421"},{"id":87,"nazione":"Italia","regione":"Sardegna","citta":"Bugerru","nome":"","indirizzo":"","lat":39.400567,"lon":8.4006,"costo":"20€ al giorno","tipologia":"Area Sosta","data":"10/08/2013","note":"Vista spiaggia","web":"","mail":"","tel":""},{"id":88,"nazione":"Italia","regione":"Sardegna","citta":"Chia","nome":"Culurgioni","indirizzo":"","lat":38.880767,"lon":8.85515,"costo":"8€ al giorno","tipologia":"Parcheggio","data":"19/08/2013","note":"Affollatissimo d'estate","web":"","mail":"","tel":""},{"id":89,"nazione":"Italia","regione":"Sardegna","citta":"Cagliari","nome":"Cagliari Park","indirizzo":"Via Stanislao Caboni 13","lat":39.210317,"lon":9.126983,"costo":"20€ al giorno","tipologia":"Area Attrezzata","data":"19/08/2013","note":"Sorvegliante notturno","web":"www.campercagliaripark.it","mail":"","tel":"070303147"},{"id":90,"nazione":"Italia","regione":"Sardegna","citta":"Villaputzu","nome":"Porto Corallo","indirizzo":"","lat":null,"lon":null,"costo":"26.5€ al giorno","tipologia":"Campeggio","data":"19/08/2013","note":"","web":"","mail":"info@portocorallocamping.it","tel":""},{"id":91,"nazione":"Italia","regione":"Sardegna","citta":"Baia Cea","nome":"Rocce Rosse","indirizzo":"","lat":39.868733,"lon":9.68035,"costo":"22€ al giorno","tipologia":"Area Attrezzata","data":"20/08/2013","note":"Località tranquilla","web":"www.baiacea.it","mail":"info@baiacea.it","tel":""},{"id":92,"nazione":"Italia","regione":"Sardegna","citta":"Santa Maria Navarese","nome":"Costa Orientale","indirizzo":"Località Tancau","lat":39.983467,"lon":9.6859,"costo":"23€ al giorno","tipologia":"Area Attrezzata","data":"22/08/2013","note":"Vicino grotte Cala Gonone","web":"","mail":"","tel":"0782669696"},{"id":93,"nazione":"Italia","regione":"Sardegna","citta":"Passo Genna Silana","nome":"Silana","indirizzo":"SS 125 km 182","lat":null,"lon":null,"costo":"20€ al giorno","tipologia":"Area Attrezzata","data":"23/08/2013","note":"Vicino gola So Garropu","web":"","mail":"campingsilana@tiscali.it","tel":""},{"id":94,"nazione":"Italia","regione":"Sardegna","citta":"Vignola Mare","nome":"Oasi Gallura","indirizzo":"","lat":41.1257,"lon":9.0618,"costo":"22€ al giorno","tipologia":"Area Attrezzata","data":"25/08/2013","note":"Sulla spiaggia","web":"www.oasigallura.it","mail":"","tel":""},{"id":95,"nazione":"Italia","regione":"Sardegna","citta":"San Teodoro","nome":"Camping La Cinta","indirizzo":"Via del Tirreno snc","lat":null,"lon":null,"costo":"42€ con tassa soggiorno","tipologia":"Campeggio","data":"2021-07-22","note":"Attaccato alla spiaggia","web":"https://www.campingsanteodoro.com","mail":"booking@campingsanteodoro.com","tel":""},{"id":96,"nazione":"Italia","regione":"Sardegna","citta":"Platamona","nome":"Camping Golfo Asinara","indirizzo":"Loc. Platamona 35 Sorso","lat":null,"lon":null,"costo":"30€ con tassa soggiorno","tipologia":"Campeggio","data":"2021-07-27","note":"20 min da Sassari","web":"http://www.campingasinara.it","mail":"info@campingasinara.it","tel":""},{"id":97,"nazione":"Italia","regione":"Sardegna","citta":"Chia","nome":"Area camper Culurgioni","indirizzo":"CHIA Loc. su Giudeu","lat":null,"lon":null,"costo":"25€ al giorno","tipologia":"Area Attrezzata","data":"2021-08-02","note":"Doccie a pagamento 0.50€","web":"","mail":"","tel":""},{"id":98,"nazione":"Italia","regione":"Sardegna","citta":"Baia Cea","nome":"Area sosta Baia Cea","indirizzo":"Via Monsignor Virgilio 91","lat":null,"lon":null,"costo":"35€ al giorno","tipologia":"Area Attrezzata","data":"2021-08-06","note":"Sulla spiaggia","web":"http://www.baiacea.it","mail":"","tel":""},{"id":99,"nazione":"Italia","regione":"Sardegna","citta":"Capo Ferrato","nome":"Camping Tiliguerta","indirizzo":"SP 97 km 6 Muravera","lat":null,"lon":null,"costo":"63€ al giorno","tipologia":"Campeggio","data":"2021-08-07","note":"Sulla spiaggia","web":"https://www.tiliguerta.com","mail":"booking@tiliguerta.com","tel":""},{"id":100,"nazione":"Italia","regione":"Sardegna","citta":"Torre Grande","nome":"Village Camping Spinnaker","indirizzo":"Localita Torre Grande","lat":null,"lon":null,"costo":"37.5€ al giorno","tipologia":"Campeggio","data":"2021-08-14","note":"Vicino Cabras e Tharros","web":"www.spinnakervacanze.com","mail":"booking@spinnakervacanze.com","tel":""},{"id":101,"nazione":"Italia","regione":"Sardegna","citta":"La Maddalena","nome":"Il Sole","indirizzo":"Via Indipendenza 71","lat":null,"lon":null,"costo":"40€ al giorno","tipologia":"Area Attrezzata","data":"2021-07-25","note":"Perfetta per girare La Maddalena","web":"http://areacamperilsole.it","mail":"info@areacamperilsole.it","tel":"334 856 5274"},{"id":102,"nazione":"Italia","regione":"Sardegna","citta":"Porto San Paolo","nome":"Camper Sardegna","indirizzo":"Via Alfieri 07020","lat":null,"lon":null,"costo":"27€ al giorno","tipologia":"Area Attrezzata","data":"2021-07-29","note":"Navetta spiagge 4€","web":"https://areasostaportosanpaolo.com","mail":"info@campersardegna.net","tel":"3289199481"},{"id":103,"nazione":"Italia","regione":"Sardegna","citta":"Valledoria","nome":"Area Camper Maragnani","indirizzo":"Via La Ciaccia 07039","lat":null,"lon":null,"costo":"20€ al giorno","tipologia":"Area Attrezzata","data":"2021-07-24","note":"Molto rustica","web":"","mail":"","tel":""},{"id":104,"nazione":"Italia","regione":"Trentino","citta":"Romagnano","nome":"Locanda de L'Arguta","indirizzo":"Via delle Ischie 37","lat":46.00986,"lon":11.11403,"costo":"18€ al giorno","tipologia":"Agriturismo","data":"26/04/2014","note":"Fuori Trento","web":"www.locanda-arguta.it","mail":"info@locanda-arguta.it","tel":"0461349147"},{"id":105,"nazione":"Italia","regione":"Trentino","citta":"Levico Terme","nome":"Camping Levico","indirizzo":"","lat":46.008239,"lon":11.28503,"costo":"19.50€","tipologia":"Campeggio","data":"30/04/2014","note":"Sul lago","web":"www.campinglevico.it","mail":"","tel":""},{"id":106,"nazione":"Italia","regione":"Trentino","citta":"Vipiteno","nome":"","indirizzo":"","lat":46.880012,"lon":11.43929,"costo":"13€","tipologia":"Area Attrezzata","data":"29/07/2012","note":"Sull'autoporto","web":"","mail":"","tel":""},{"id":107,"nazione":"Italia","regione":"Trentino","citta":"Alpe di Siusi","nome":"Camping Seiser Alm","indirizzo":"S. Costantino 16/A","lat":null,"lon":null,"costo":"36€ al giorno","tipologia":"Campeggio","data":"02/06/2015","note":"Vicino funivia","web":"www.camping-seiseralm.com","mail":"info@camping-seiseralm.com","tel":"+39 0471 706459"},{"id":108,"nazione":"Italia","regione":"Friuli Venezia Giulia","citta":"Staranzano","nome":"","indirizzo":"Via delle Acacie","lat":45.806667,"lon":13.489167,"costo":"Gratis + 2€ elettricità","tipologia":"Area Attrezzata","data":"02/05/2014","note":"Vicino campo Softball","web":"","mail":"","tel":""},{"id":109,"nazione":"Italia","regione":"Friuli Venezia Giulia","citta":"Trieste","nome":"","indirizzo":"Via Ottaviano Augusto","lat":null,"lon":null,"costo":"A pagamento 3€/4h","tipologia":"Parcheggio","data":"02/05/2014","note":"Sul lungomare","web":"","mail":"","tel":""},{"id":110,"nazione":"Italia","regione":"Liguria","citta":"La Spezia","nome":"","indirizzo":"Viale San Bartolomeo 805/a","lat":null,"lon":null,"costo":"12€ con corrente","tipologia":"Area Sosta","data":"09/12/2015","note":"Carico e scarico","web":"","mail":"","tel":"3398052587"},{"id":111,"nazione":"Italia","regione":"Liguria","citta":"Levanto","nome":"Camping Acqua Dolce","indirizzo":"Via Guido Semenza 5","lat":null,"lon":null,"costo":"34€ tutto compreso","tipologia":"Campeggio","data":"06/01/2020","note":"Vicinissimo al centro","web":"http://www.campingacquadolce.com","mail":"info@campingacquadolce.com","tel":"0187-808465"},{"id":112,"nazione":"Italia","regione":"Liguria","citta":"Albenga","nome":"Agricampeggio Cà de Michè","indirizzo":"Viale 8 Marzo 45","lat":null,"lon":null,"costo":"30€ tutto compreso","tipologia":"Agricampeggio","data":"2026-05-01","note":"Vicino alla città","web":"https://www.agricampeggiocademiche.it","mail":"info@agricampeggiocademiche.it","tel":"39347653966"},{"id":113,"nazione":"Italia","regione":"Puglia","citta":"Lesina","nome":"Area camper L'Oasi","indirizzo":"Via Banchina Vollaro","lat":41.91259,"lon":16.12663,"costo":"20€ con corrente","tipologia":"Area Sosta","data":"26/12/2017","note":"Sul lago","web":"","mail":"","tel":"3479802174"},{"id":114,"nazione":"Italia","regione":"Puglia","citta":"Polignano a mare","nome":"Area Sosta Laruccia","indirizzo":"Contrada Pozzovivo","lat":40.981133,"lon":17.243383,"costo":"20€ con corrente","tipologia":"Area Sosta","data":"27/12/2017","note":"Navetta gratuita","web":"","mail":"","tel":"0804249362"},{"id":115,"nazione":"Italia","regione":"Puglia","citta":"Alberobello","nome":"Nel Verde","indirizzo":"Via Don F. Gigante","lat":40.7828,"lon":17.23361,"costo":"16€ con corrente","tipologia":"Area Sosta","data":"28/12/2017","note":"Attaccato al paese","web":"","mail":"","tel":"3384915879"},{"id":116,"nazione":"Italia","regione":"Puglia","citta":"Ruvo di Puglia","nome":"Area sosta comunale","indirizzo":"Via Scarlatti 1bis","lat":null,"lon":null,"costo":"10€ con corrente","tipologia":"Area Sosta","data":"02/01/2018","note":"Vicino al paese","web":"","mail":"","tel":"3293149868"},{"id":117,"nazione":"Italia","regione":"Puglia","citta":"Trani","nome":"Camper Park Trani","indirizzo":"Via dei Finanzieri 7","lat":41.28213,"lon":16.41053,"costo":"16€ con corrente","tipologia":"Area Sosta","data":"03/01/2018","note":"Vicino caseificio","web":"","mail":"","tel":"3479466882"},{"id":118,"nazione":"Italia","regione":"Basilicata","citta":"Matera","nome":"Area Sosta Kartodromo","indirizzo":"SS7 via Appia","lat":40.67984,"lon":16.62436,"costo":"20€ con tutto","tipologia":"Area Sosta","data":"30/12/2017","note":"Navetta gratuita","web":"","mail":"","tel":"3391090996"},{"id":119,"nazione":"Italia","regione":"Basilicata","citta":"Lido di Policoro","nome":"Area Sosta Policoro","indirizzo":"Via del Lido 75025","lat":null,"lon":null,"costo":"25€ tutto compreso","tipologia":"Area Sosta","data":"2023-04-14","note":"Sul mare","web":"https://www.autogmanolio.com","mail":"info@autogmanolio.com","tel":"835981327"},{"id":120,"nazione":"Italia","regione":"Marche","citta":"Ascoli Piceno","nome":"Parcheggio ex Seminario","indirizzo":"Viale De Gasperi","lat":null,"lon":null,"costo":"3€ notte / 1.20€/h","tipologia":"Parcheggio","data":"04/01/2018","note":"A 50m dal centro","web":"","mail":"","tel":""},{"id":121,"nazione":"Italia","regione":"Umbria","citta":"Assisi","nome":"Sosta Camper Assisi","indirizzo":"Via Madonna dell'Olivo 59","lat":43.06445,"lon":12.624167,"costo":"","tipologia":"Area Sosta","data":"31/10/2012","note":"400m dal centro","web":"","mail":"","tel":""},{"id":122,"nazione":"Italia","regione":"Umbria","citta":"Assisi","nome":"Motorh. All'Antica Mattonata","indirizzo":"Via Francesca 2","lat":43.0659,"lon":12.5984,"costo":"19€ + 3€ corrente","tipologia":"Area Sosta","data":"2024-02-01","note":"30 min dal centro","web":"","mail":"","tel":""},{"id":123,"nazione":"Italia","regione":"Umbria","citta":"Spello","nome":"","indirizzo":"Via Centrale Umbra 98","lat":42.9935,"lon":12.6673,"costo":"","tipologia":"Area Sosta","data":"2024-01-31","note":"5 min dal centro","web":"","mail":"","tel":""},{"id":124,"nazione":"Italia","regione":"Umbria","citta":"Perugia","nome":"Area sosta Perugia","indirizzo":"SS 75bis del Trasimeno","lat":43.098,"lon":12.3838,"costo":"20€ con corrente e scarico","tipologia":"Parcheggio","data":"2024-02-02","note":"5 min con bus dal centro","web":"","mail":"","tel":""},{"id":125,"nazione":"Italia","regione":"Sicilia","citta":"Palermo","nome":"Area camper Melica","indirizzo":"Via Barcarello 25","lat":null,"lon":null,"costo":"20€","tipologia":"Area Sosta","data":"2023-12-27","note":"20 min di bus da Palermo","web":"https://melicaparking.it","mail":"massimolicausi1972@gmail.com","tel":"393895439851"},{"id":126,"nazione":"Italia","regione":"Sicilia","citta":"Mazara del Vallo","nome":"Il Giardino dell'Emiro","indirizzo":"Via Rocca di Mezzo 7","lat":null,"lon":null,"costo":"24.5€","tipologia":"Area Sosta","data":"2023-12-30","note":"20 min a piedi dalla città","web":"https://camping-sicilia.jimdosite.com","mail":"","tel":"339 405 0901"},{"id":127,"nazione":"Italia","regione":"Sicilia","citta":"Piazza Armerina","nome":"Agriturismo Gigliotto","indirizzo":"Contrada Gigliotto","lat":null,"lon":null,"costo":"25€","tipologia":"Agriturismo","data":"2024-01-02","note":"10 min da Piazza Armerina","web":"","mail":"","tel":""},{"id":128,"nazione":"Italia","regione":"Sicilia","citta":"Noto","nome":"L'Antico Trappeto","indirizzo":"Contrada Faldino","lat":36.88369,"lon":15.086031,"costo":"24€","tipologia":"Agricampeggio","data":"2024-01-03","note":"20 min dalla città","web":"https://anticotrappetonoto.it","mail":"","tel":"333 632 6868"},{"id":129,"nazione":"Italia","regione":"Sicilia","citta":"Marzamemi","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"","tipologia":"Parcheggio","data":"2024-01-04","note":"vicino al campo da calcio","web":"","mail":"","tel":""},{"id":130,"nazione":"Francia","regione":"","citta":"Parigi","nome":"Camping Indigo Paris","indirizzo":"Allée du Bord de l'Eau 2","lat":null,"lon":null,"costo":"44.5€ al giorno","tipologia":"Campeggio","data":"27/12/2013","note":"Navetta non disponibile","web":"www.camping-indigo.com","mail":"paris@camping-indigo.com","tel":""},{"id":131,"nazione":"Francia","regione":"Alta Savoia","citta":"Annecy","nome":"Au Coeur du Lac","indirizzo":"Sevrier RN 1508","lat":45.85478,"lon":6.14393,"costo":"22€ con corrente","tipologia":"Campeggio","data":"01/06/2014","note":"Vicino pista ciclabile","web":"www.campingaucoeurdulac.com","mail":"info@aucoeurdulac.com","tel":""},{"id":132,"nazione":"Francia","regione":"Camargue","citta":"Saintes-Marie-de-la-Mer","nome":"","indirizzo":"Avenue des Massoucles","lat":43.45581,"lon":4.42713,"costo":"12€ con carico e scarico","tipologia":"Parcheggio","data":"27/12/2014","note":"Ingresso del paese","web":"","mail":"","tel":""},{"id":133,"nazione":"Francia","regione":"Camargue","citta":"Saintes-Marie-de-la-Mer","nome":"Camping La Brise de Camargue","indirizzo":"Rue Marcel Carrière","lat":43.4556,"lon":4.4363,"costo":"35€ al giorno","tipologia":"Campeggio","data":"29/12/2024","note":"1 km dal paese","web":"https://www.camping-labrise.fr","mail":"","tel":""},{"id":134,"nazione":"Francia","regione":"Camargue","citta":"Aigues-Mortes","nome":"","indirizzo":"","lat":43.56559,"lon":4.19658,"costo":"9.40€ con carico e scarico","tipologia":"Parcheggio","data":"27/12/2014","note":"Parcheggio P4","web":"","mail":"","tel":""},{"id":135,"nazione":"Francia","regione":"Linguadoca","citta":"Port-Vendres","nome":"","indirizzo":"","lat":42.51778,"lon":3.11375,"costo":"6€ con carico e scarico","tipologia":"Area Sosta","data":"28/12/2014","note":"Soldi riscossi dai vigili","web":"","mail":"","tel":""},{"id":136,"nazione":"Francia","regione":"Linguadoca","citta":"Sète","nome":"Parking les 3 Digues","indirizzo":"","lat":43.36663,"lon":3.61523,"costo":"Gratis con scarico","tipologia":"Parcheggio","data":"03/01/2015","note":"Sul mare","web":"","mail":"","tel":""},{"id":137,"nazione":"Francia","regione":"Centre","citta":"Brezolles","nome":"","indirizzo":"","lat":48.69084,"lon":1.06949,"costo":"Gratis con scarico","tipologia":"Area Sosta","data":"24/12/2016","note":"Area cittadina","web":"","mail":"","tel":""},{"id":138,"nazione":"Francia","regione":"Centre","citta":"Chambord","nome":"Parcheggio P2","indirizzo":"","lat":47.6187,"lon":1.51225,"costo":"11€ senza nulla","tipologia":"Parcheggio","data":"02/01/2017","note":"Parcheggio castello","web":"","mail":"","tel":""},{"id":139,"nazione":"Francia","regione":"Centre","citta":"Amboise","nome":"Camping Indigo","indirizzo":"","lat":47.418,"lon":0.98809,"costo":"12€ con corrente","tipologia":"Area Sosta","data":"03/01/2017","note":"Con corrente","web":"","mail":"","tel":""},{"id":140,"nazione":"Francia","regione":"Centre","citta":"Bourges","nome":"","indirizzo":"","lat":47.0597,"lon":2.39897,"costo":"Gratis","tipologia":"Parcheggio","data":"04/01/2017","note":"Con scarico","web":"","mail":"","tel":""},{"id":141,"nazione":"Francia","regione":"Paesi della Loira","citta":"Montreuil-Juigné","nome":"","indirizzo":"","lat":47.54155,"lon":-0.61518,"costo":"Gratis con scarico","tipologia":"Area Sosta","data":"01/01/2017","note":"Sul fiume Maine","web":"","mail":"","tel":""},{"id":142,"nazione":"Francia","regione":"Normandia","citta":"Honfleur","nome":"","indirizzo":"Quai de la Cale","lat":49.41724,"lon":0.24318,"costo":"11€ con elettricità","tipologia":"Area Attrezzata","data":"25/12/2016","note":"In città","web":"","mail":"","tel":""},{"id":143,"nazione":"Francia","regione":"Normandia","citta":"Ouistreham","nome":"","indirizzo":"","lat":49.287306,"lon":-0.249667,"costo":"10€ con acqua","tipologia":"Area Sosta","data":"26/12/2016","note":"Vicino museo","web":"","mail":"","tel":""},{"id":144,"nazione":"Francia","regione":"Normandia","citta":"Granville","nome":"","indirizzo":"","lat":48.835,"lon":-1.609444,"costo":"9.5€/24h senza elettricità","tipologia":"Area Attrezzata","data":"27/12/2016","note":"In città","web":"","mail":"","tel":""},{"id":145,"nazione":"Francia","regione":"Bretagna","citta":"Cancale","nome":"Area comunale","indirizzo":"","lat":48.66984,"lon":-1.8663,"costo":"10€ senza elettricità","tipologia":"Area Attrezzata","data":"28/12/2016","note":"In città","web":"","mail":"","tel":""},{"id":146,"nazione":"Francia","regione":"Bretagna","citta":"Trégastel","nome":"Area campo tennis","indirizzo":"","lat":48.82377,"lon":-3.49953,"costo":"8€ con carico","tipologia":"Area Attrezzata","data":"29/12/2016","note":"In città","web":"","mail":"","tel":""},{"id":147,"nazione":"Francia","regione":"Bretagna","citta":"Kerouac","nome":"Parcheggio","indirizzo":"","lat":48.66952,"lon":-4.36161,"costo":"Gratis","tipologia":"Parcheggio","data":"30/12/2016","note":"In campagna","web":"","mail":"","tel":""},{"id":148,"nazione":"Francia","regione":"Bretagna","citta":"Pontivy","nome":"Parcheggio","indirizzo":"","lat":48.06758,"lon":-2.96941,"costo":"Gratis con scarico","tipologia":"Parcheggio","data":"31/12/2016","note":"In città","web":"","mail":"","tel":""},{"id":149,"nazione":"Francia","regione":"Rhône-Alpes","citta":"Pontcharra sur Turdine","nome":"","indirizzo":"","lat":45.87405,"lon":4.49133,"costo":"Gratis","tipologia":"Parcheggio","data":"23/12/2016","note":"In città","web":"","mail":"","tel":""},{"id":150,"nazione":"Francia","regione":"Rhône-Alpes","citta":"Saint-Théoffrey","nome":"","indirizzo":"","lat":45.00035,"lon":5.77808,"costo":"Gratis","tipologia":"Parcheggio","data":"05/01/2017","note":"Con colonnina","web":"","mail":"","tel":""},{"id":151,"nazione":"Francia","regione":"Provenza","citta":"Aix-en-Provence","nome":"Camping Chantecler","indirizzo":"Avenue du Val Saint André","lat":null,"lon":null,"costo":"20.30€ senza corrente","tipologia":"Campeggio","data":"26/12/2014","note":"Fuori dalla città","web":"","mail":"","tel":""},{"id":152,"nazione":"Francia","regione":"Provenza","citta":"Savines-le-Lac","nome":"Parking du Barnafret","indirizzo":"Avenue du Frabourg","lat":44.52495,"lon":6.4009,"costo":"Gratis con bagni","tipologia":"Parcheggio","data":"04/01/2015","note":"","web":"","mail":"","tel":""},{"id":153,"nazione":"Francia","regione":"Alsazia","citta":"Colmar","nome":"","indirizzo":"","lat":48.08054,"lon":7.37487,"costo":"11.80€ con corrente","tipologia":"Area Attrezzata","data":"2017-11-03","note":"10 min dalla città","web":"","mail":"","tel":""},{"id":154,"nazione":"Francia","regione":"Alsazia","citta":"Kaysersberg","nome":"Parcheggio P1","indirizzo":"Place de L'Erlenbad","lat":48.13605,"lon":7.26188,"costo":"8€ con carico acqua","tipologia":"Area Attrezzata","data":"2017-11-02","note":"Attaccato alla città","web":"","mail":"","tel":""},{"id":155,"nazione":"Francia","regione":"Alsazia","citta":"Eguisheim","nome":"","indirizzo":"","lat":48.04367,"lon":7.31273,"costo":"","tipologia":"Parcheggio","data":"2017-11-01","note":"Parcheggio scuola","web":"","mail":"","tel":""},{"id":156,"nazione":"Francia","regione":"Provenza","citta":"Castellane","nome":"Camping Huttopia Verdon","indirizzo":"Clos d'Arenus","lat":null,"lon":null,"costo":"24€ tutto compreso","tipologia":"Campeggio","data":"2022-06-01","note":"","web":"https://europe.huttopia.com","mail":"","tel":""},{"id":157,"nazione":"Francia","regione":"Provenza","citta":"Moustiers-Sainte-Marie","nome":"Camping Saint Jean","indirizzo":"Quartier Saint Jean","lat":null,"lon":null,"costo":"18€ tutto compreso","tipologia":"Campeggio","data":"2022-06-02","note":"","web":"https://www.camping-st-jean.fr","mail":"","tel":""},{"id":158,"nazione":"Francia","regione":"Provenza","citta":"Savines-le-Lac","nome":"Campeggio municipale","indirizzo":"","lat":null,"lon":null,"costo":"20€ tutto compreso","tipologia":"Campeggio","data":"2022-06-03","note":"","web":"","mail":"","tel":""},{"id":159,"nazione":"Francia","regione":"Linguadoca","citta":"Béziers","nome":"Camping car de Sauclieres","indirizzo":"Av. Fernand Sastre","lat":null,"lon":null,"costo":"9.40€ con carico e scarico","tipologia":"Area Attrezzata","data":"2023-01-08","note":"Vicino alla città","web":"","mail":"","tel":""},{"id":160,"nazione":"Francia","regione":"Alta Savoia","citta":"Monginevro","nome":"","indirizzo":"Rue des Baisses","lat":null,"lon":null,"costo":"18€ con corrente","tipologia":"Area Attrezzata","data":"2023-07-29","note":"Al confine","web":"","mail":"","tel":""},{"id":161,"nazione":"Francia","regione":"","citta":"La Clayette","nome":"Camping Les Bruyeres","indirizzo":"9 Route de Gibles","lat":null,"lon":null,"costo":"24.60€","tipologia":"Campeggio","data":"2023-07-30","note":"Castello in città","web":"","mail":"","tel":""},{"id":162,"nazione":"Francia","regione":"","citta":"Sancerre","nome":"Camping Le Portes de Sancerre","indirizzo":"Saint-Satur Quai de Loire","lat":null,"lon":null,"costo":"22.78€","tipologia":"Campeggio","data":"2023-07-31","note":"A 3 km dal paese","web":"","mail":"","tel":""},{"id":163,"nazione":"Francia","regione":"","citta":"Versailles","nome":"Parking Europe","indirizzo":"16 Avenue de Saint-Cloud","lat":null,"lon":null,"costo":"18€ senza servizi","tipologia":"Parcheggio","data":"2023-08-01","note":"200m dalla reggia","web":"","mail":"","tel":""},{"id":164,"nazione":"Francia","regione":"Normandia","citta":"Giverny","nome":"","indirizzo":"Parcheggio 41 Chemin du Roy","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"2023-08-02","note":"Casa di Monet","web":"","mail":"","tel":""},{"id":165,"nazione":"Francia","regione":"Normandia","citta":"Étretat","nome":"","indirizzo":"90-92 Rue Guy de Maupassant","lat":null,"lon":null,"costo":"13€","tipologia":"Area Attrezzata","data":"2023-08-04","note":"Senza elettricità","web":"","mail":"","tel":""},{"id":166,"nazione":"Francia","regione":"","citta":"Grenay","nome":"","indirizzo":"Rue François Beaucamp","lat":null,"lon":null,"costo":"Gratis","tipologia":"Area Attrezzata","data":"2023-08-05","note":"3 posti camper","web":"","mail":"","tel":""},{"id":167,"nazione":"Francia","regione":"","citta":"Ardres","nome":"Les Robinsons du Lac","indirizzo":"278 Av. du Lac","lat":null,"lon":null,"costo":"25€","tipologia":"Campeggio","data":"2023-08-06","note":"Senza scarico","web":"","mail":"","tel":""},{"id":168,"nazione":"Francia","regione":"Provenza","citta":"Apt","nome":"","indirizzo":"Plan d'eau de la Riaille","lat":43.8933,"lon":5.3776,"costo":"14€","tipologia":"Area Attrezzata","data":"2024-12-26","note":"Vicino laghetto","web":"","mail":"","tel":""},{"id":169,"nazione":"Francia","regione":"Provenza","citta":"Fontaine-de-Vaucluse","nome":"","indirizzo":"Route de Cavaillon","lat":43.9202,"lon":5.1247,"costo":"14€","tipologia":"Area Attrezzata","data":"2024-12-27","note":"Città molto carina","web":"","mail":"","tel":""},{"id":170,"nazione":"Francia","regione":"Camargue","citta":"Avignone","nome":"Camping Bagatelle","indirizzo":"25 Allée Antoine Pinay","lat":43.9522,"lon":4.7992,"costo":"31€","tipologia":"Campeggio","data":"2025-01-02","note":"Comodo per la città","web":"","mail":"","tel":""},{"id":171,"nazione":"Germania","regione":"","citta":"Wallnau Fehmarn","nome":"Strandcamping Wallnau","indirizzo":"D-23769","lat":null,"lon":null,"costo":"31.5€ al giorno","tipologia":"Campeggio","data":"07/08/2010","note":"Sul mare del Nord","web":"www.strandcamping.de","mail":"wallnau@strandcamping.de","tel":""},{"id":172,"nazione":"Germania","regione":"","citta":"Lindau Bodensee","nome":"Park Camping Lindau","indirizzo":"Fraunhoferstraße 20","lat":null,"lon":null,"costo":"26.70€ al giorno","tipologia":"Campeggio","data":"23/08/2010","note":"Sul Lago di Costanza","web":"www.park-camping.de","mail":"info@park-camping.de","tel":""},{"id":173,"nazione":"Germania","regione":"","citta":"Egestorf","nome":"","indirizzo":"","lat":53.19796,"lon":10.05455,"costo":"8€ con elettricità","tipologia":"Area Attrezzata","data":"01/07/2012","note":"Acqua a consumo","web":"","mail":"","tel":""},{"id":174,"nazione":"Germania","regione":"","citta":"Berlino","nome":"Wohnmobil Park Berlin","indirizzo":"Waidmannsluster Damm 12-14","lat":52.59558,"lon":13.28911,"costo":"24€ al giorno","tipologia":"Area Attrezzata","data":"23/08/2012","note":"15 min metro","web":"www.stellplatz-berlin.de","mail":"","tel":""},{"id":175,"nazione":"Germania","regione":"","citta":"Dresda","nome":"","indirizzo":"","lat":51.05676,"lon":13.74331,"costo":"18€ al giorno","tipologia":"Area Sosta","data":"21/08/2012","note":"Di fronte alla città","web":"","mail":"","tel":""},{"id":176,"nazione":"Germania","regione":"","citta":"Füssen","nome":"Wohnmobilplatz","indirizzo":"Abt Hafner Strasse 9","lat":47.58241,"lon":10.70144,"costo":"12€ al giorno","tipologia":"Area Attrezzata","data":"28/08/2012","note":"Vicino alla città","web":"","mail":"","tel":""},{"id":177,"nazione":"Germania","regione":"","citta":"Holzappel","nome":"","indirizzo":"Am Hersthassse","lat":50.36194,"lon":7.90266,"costo":"6€ al giorno","tipologia":"Area Sosta","data":"02/08/2014","note":"","web":"","mail":"","tel":""},{"id":178,"nazione":"Germania","regione":"","citta":"Bad Bellingen","nome":"","indirizzo":"","lat":47.72991,"lon":7.55239,"costo":"16.50€ con elettricità","tipologia":"Area Sosta","data":"18/08/2014","note":"Vicino terme","web":"","mail":"","tel":""},{"id":179,"nazione":"Germania","regione":"","citta":"Lindau","nome":"Parcheggio P1","indirizzo":"Reutinerstrasse","lat":47.55861,"lon":9.70027,"costo":"20€ al giorno","tipologia":"Parcheggio","data":"29/05/2015","note":"In bici","web":"","mail":"","tel":""},{"id":180,"nazione":"Germania","regione":"","citta":"Meersburg","nome":"Camping Meersburg","indirizzo":"Schloss Kirchberg","lat":47.67014,"lon":9.33114,"costo":"31.5€","tipologia":"Campeggio","data":"30/05/2015","note":"4km da Meersburg","web":"","mail":"","tel":""},{"id":181,"nazione":"Germania","regione":"","citta":"Rothenburg ob der Tauber","nome":"","indirizzo":"Parcheggio P2","lat":49.371119,"lon":10.18297,"costo":"9€ al giorno","tipologia":"Area Sosta","data":"2015-07-26","note":"","web":"","mail":"","tel":""},{"id":182,"nazione":"Germania","regione":"","citta":"Homberg/Efze","nome":"","indirizzo":"Wassmuthshauserstrasse","lat":51.02757,"lon":9.4147,"costo":"Gratis con corrente","tipologia":"Area Sosta","data":"2016-08-23","note":"Vicino statale","web":"","mail":"","tel":""},{"id":183,"nazione":"Germania","regione":"","citta":"Bad Krozingen","nome":"","indirizzo":"","lat":47.91763,"lon":7.68821,"costo":"12€ al giorno","tipologia":"Parcheggio","data":"2016-07-28","note":"Parcheggio terme","web":"","mail":"","tel":""},{"id":184,"nazione":"Germania","regione":"","citta":"Ravensburg","nome":"","indirizzo":"Muhlbruckstrasse","lat":47.78196,"lon":9.60001,"costo":"8.5€ + 0.50€/KWh","tipologia":"Area Sosta","data":"2016-07-27","note":"","web":"","mail":"","tel":""},{"id":185,"nazione":"Germania","regione":"","citta":"Litzelstetten","nome":"Camping Litzelstetten Mainau","indirizzo":"Großherzog-Friedrich-Str. 43","lat":null,"lon":null,"costo":"87€ per 3 notti","tipologia":"Campeggio","data":"31/07/2019","note":"Vicino Costanza e isola Mainau","web":"","mail":"","tel":""},{"id":186,"nazione":"Germania","regione":"","citta":"Rotweil","nome":"","indirizzo":"Stadionstrasse 52","lat":null,"lon":null,"costo":"8€ + 1€ elettricità 8h","tipologia":"Area Sosta","data":"02/09/2019","note":"Vicino piscina","web":"","mail":"","tel":""},{"id":187,"nazione":"Germania","regione":"","citta":"Titisee","nome":"Camping Bankenhof","indirizzo":"","lat":47.88643,"lon":8.13046,"costo":"30€","tipologia":"Campeggio","data":"2019-09-03","note":"3 km dalla città","web":"","mail":"","tel":""},{"id":188,"nazione":"Germania","regione":"","citta":"Friburgo","nome":"","indirizzo":"Bissierstraße 30","lat":null,"lon":null,"costo":"10€ + 1€ elettricità","tipologia":"Area Sosta","data":"2019-09-04","note":"","web":"","mail":"","tel":""},{"id":189,"nazione":"Germania","regione":"","citta":"Aquisgrana","nome":"Stellplatz Bad Aachen","indirizzo":"Branderhofer Weg 11","lat":null,"lon":null,"costo":"17€","tipologia":"Area Sosta","data":"2019-09-07","note":"3 km dalla città","web":"","mail":"","tel":""},{"id":190,"nazione":"Germania","regione":"","citta":"Stoccarda","nome":"Campeggio Cannstatter","indirizzo":"Mercedesstraße 4","lat":null,"lon":null,"costo":"53.2€ per 2 notti","tipologia":"Area Sosta","data":"2019-09-20","note":"Vicino museo Mercedes","web":"","mail":"","tel":""},{"id":191,"nazione":"Germania","regione":"","citta":"Fischbach","nome":"Campeggio Fischbach","indirizzo":"Grenzösch 3 Friedrichshafen","lat":null,"lon":null,"costo":"89.3€ per 3 notti","tipologia":"Campeggio","data":"2019-09-22","note":"Vicino Friedrichshafen","web":"","mail":"","tel":""},{"id":192,"nazione":"Germania","regione":"","citta":"Schwerte","nome":"","indirizzo":"Im Reiche des Wassers 3","lat":51.4396,"lon":7.5734,"costo":"15€ a notte","tipologia":"Area Attrezzata","data":"2023-04-20","note":"Vicino città","web":"","mail":"","tel":""},{"id":193,"nazione":"Germania","regione":"","citta":"Goch","nome":"Stellplatz Goch Friedensplatz","indirizzo":"Schnepfenweg 25","lat":null,"lon":null,"costo":"5.29€","tipologia":"Area Attrezzata","data":"2023-04-28","note":"Vicino città","web":"","mail":"","tel":""},{"id":194,"nazione":"Germania","regione":"","citta":"Lörrach","nome":"Area camper","indirizzo":"Grüttweg 8","lat":null,"lon":null,"costo":"17.2€","tipologia":"Area Attrezzata","data":"2023-04-29","note":"Vicino città","web":"","mail":"","tel":""},{"id":195,"nazione":"Olanda","regione":"","citta":"Elburg","nome":"","indirizzo":"","lat":52.45095,"lon":5.82945,"costo":"Gratis 3 notti","tipologia":"Punto Sosta","data":"03/08/2014","note":"Nel porto","web":"","mail":"","tel":""},{"id":196,"nazione":"Olanda","regione":"","citta":"Utrecht","nome":"Budget Camping","indirizzo":"Arienslaan 5","lat":null,"lon":null,"costo":"14€ per 2 persone con elettricità","tipologia":"Campeggio","data":"05/08/2014","note":"3 km dal centro","web":"","mail":"budgetcampingutrecht@xs4all.nl","tel":""},{"id":197,"nazione":"Olanda","regione":"","citta":"Oostkapelle","nome":"","indirizzo":"","lat":51.56573,"lon":3.5363,"costo":"16.5€ con elettricità","tipologia":"Campeggio","data":"06/08/2014","note":"Mini camping","web":"","mail":"","tel":""},{"id":198,"nazione":"Olanda","regione":"","citta":"Zierikzee","nome":"Camping Kloet","indirizzo":"","lat":51.64629,"lon":3.91149,"costo":"23€ tutto compreso","tipologia":"Campeggio","data":"07/08/2014","note":"Vicino città","web":"http://tv.campingkloet.nl","mail":"","tel":""},{"id":199,"nazione":"Olanda","regione":"","citta":"Delft","nome":"Delftse Hout","indirizzo":"Koftlaan 5","lat":null,"lon":null,"costo":"33€ con elettricità","tipologia":"Campeggio","data":"08/08/2014","note":"","web":"www.delftsehout.nl","mail":"","tel":""},{"id":200,"nazione":"Olanda","regione":"","citta":"Haarlem","nome":"Camping De Liede","indirizzo":"Lieover 68","lat":52.27784,"lon":4.67612,"costo":"22.20€ con elettricità","tipologia":"Campeggio","data":"13/08/2014","note":"","web":"www.campingdeliede.nl","mail":"info@campingdeliede.nl","tel":""},{"id":201,"nazione":"Olanda","regione":"","citta":"Mechelen","nome":"Fattoria Mechelen","indirizzo":"","lat":null,"lon":null,"costo":"21€","tipologia":"Campeggio","data":"2019-08-08","note":"Vicino Aquisgrana","web":"","mail":"","tel":""},{"id":202,"nazione":"Olanda","regione":"","citta":"Maastricht","nome":"Camperplaats Maastricht","indirizzo":"","lat":50.874967,"lon":5.680917,"costo":"18.5€","tipologia":"Area Sosta","data":"2019-08-08","note":"5 min in bici","web":"","mail":"","tel":""},{"id":203,"nazione":"Olanda","regione":"","citta":"Zoutkamp","nome":"Camping Rousant","indirizzo":"Nittersweg 8","lat":null,"lon":null,"costo":"20€ tutto compreso","tipologia":"Campeggio","data":"21/04/2023","note":"In parco naturale","web":"","mail":"","tel":""},{"id":204,"nazione":"Olanda","regione":"","citta":"Noordwijkerhout","nome":"Camping Op Hoop van Zegen","indirizzo":"Westeinde 76","lat":null,"lon":null,"costo":"25€","tipologia":"Campeggio","data":"23/04/2023","note":"Vicino Keukenhof","web":"","mail":"","tel":""},{"id":205,"nazione":"Olanda","regione":"","citta":"Den Burg Texel","nome":"Camping De Hal","indirizzo":"Hallerweg 33","lat":null,"lon":null,"costo":"30€ a notte","tipologia":"Campeggio","data":"25/04/2023","note":"Molto bello","web":"","mail":"","tel":""},{"id":206,"nazione":"Olanda","regione":"","citta":"Edam","nome":"Camping Strandbad Edam","indirizzo":"Zeevangszeedijk 7A","lat":null,"lon":null,"costo":"37€ a notte","tipologia":"Campeggio","data":"27/04/2023","note":"Vicino città","web":"","mail":"","tel":""},{"id":207,"nazione":"Spagna","regione":"","citta":"Valencia","nome":"Valencia Camper Park","indirizzo":"Diseminado Providencia 47","lat":39.56126,"lon":-0.34123,"costo":"15€ al giorno","tipologia":"Area Attrezzata","data":"30/12/2014","note":"Carico acqua 0.50€","web":"www.valenciacamperpark.com","mail":"","tel":""},{"id":208,"nazione":"Spagna","regione":"","citta":"Archidona","nome":"","indirizzo":"Calle Virgen de los Dolores","lat":37.09082,"lon":-4.38912,"costo":"Gratuita","tipologia":"Area Attrezzata","data":"2023-01-06","note":"Non c'è nulla","web":"","mail":"","tel":""},{"id":209,"nazione":"Austria","regione":"","citta":"Vienna","nome":"Camping Neue Donau","indirizzo":"Am Kleehaufen A 1220","lat":48.2333,"lon":16.4444,"costo":"25€ al giorno","tipologia":"Campeggio","data":"25/04/2012","note":"Chiuso a Natale","web":"www.campingwien.at","mail":"neuedonau@campingwien.at","tel":""},{"id":210,"nazione":"Austria","regione":"","citta":"Salisburgo","nome":"Camping Panorama","indirizzo":"Rauchenbichler Strasse 21","lat":47.82839,"lon":13.05179,"costo":"28€ al giorno","tipologia":"Campeggio","data":"28/04/2012","note":"Ben curato in bici","web":"www.panorama-camping.at","mail":"","tel":""},{"id":211,"nazione":"Austria","regione":"","citta":"Innsbruck","nome":"Camping Kranebitter","indirizzo":"Kranebitter Allee 214","lat":47.26438,"lon":11.32568,"costo":"25€ al giorno","tipologia":"Campeggio","data":"01/05/2012","note":"Ben curato in bici","web":"www.campingplatz-innsbruck.at","mail":"info@camping-kranebitterhof.at","tel":""},{"id":212,"nazione":"Belgio","regione":"","citta":"Bruxelles","nome":"3CB Camping Bruxelles","indirizzo":"","lat":null,"lon":null,"costo":"28.5€","tipologia":"Campeggio","data":"2019-08-09","note":"2 km dalla metro","web":"","mail":"","tel":""},{"id":213,"nazione":"Belgio","regione":"","citta":"Anversa","nome":"Camping de Molen","indirizzo":"Thonetlaan Jachtavenweg 6","lat":null,"lon":null,"costo":"53.2€ per 2 notti","tipologia":"Campeggio","data":"2019-08-11","note":"In barca in centro","web":"","mail":"","tel":""},{"id":214,"nazione":"Belgio","regione":"","citta":"Gand","nome":"Blaarmeersen Campsite","indirizzo":"Campinglaan 16","lat":null,"lon":null,"costo":"30.1€","tipologia":"Campeggio","data":"2019-09-13","note":"Navetta gratuita","web":"","mail":"","tel":""},{"id":215,"nazione":"Belgio","regione":"","citta":"Bruges","nome":"Parking Kanaaleiland","indirizzo":"Parking Kanaaleiland","lat":null,"lon":null,"costo":"25€","tipologia":"Parcheggio","data":"2019-08-14","note":"Carico e scarico","web":"","mail":"","tel":""},{"id":216,"nazione":"Belgio","regione":"","citta":"Kemmel","nome":"Campeggio Kemmel","indirizzo":"","lat":null,"lon":null,"costo":"25€","tipologia":"Campeggio","data":"2019-08-17","note":"","web":"","mail":"","tel":""},{"id":217,"nazione":"Belgio","regione":"","citta":"Tournai","nome":"Camping de l'Orient","indirizzo":"","lat":null,"lon":null,"costo":"16.1€","tipologia":"Campeggio","data":"2019-08-19","note":"","web":"","mail":"","tel":""},{"id":218,"nazione":"Belgio","regione":"","citta":"Bouillon","nome":"Parking Bouillon","indirizzo":"Rue de la Poulie 6830","lat":null,"lon":null,"costo":"Gratuita","tipologia":"Area Sosta","data":"2019-08-20","note":"Visita abbazia","web":"","mail":"","tel":""},{"id":219,"nazione":"Lussemburgo","regione":"","citta":"Diekirch","nome":"Camperlocatie Diekirch","indirizzo":"Route de Gilsdorf 9234","lat":null,"lon":null,"costo":"19€","tipologia":"Campeggio","data":"05/09/2019","note":"Vicinissimo città","web":"","mail":"","tel":""},{"id":220,"nazione":"Lussemburgo","regione":"","citta":"Città di Lussemburgo","nome":"Camping Kockelschever","indirizzo":"22 Route de Bettembourg","lat":49.5722,"lon":6.142,"costo":"19.5€","tipologia":"Campeggio","data":"2019-08-19","note":"","web":"","mail":"","tel":""},{"id":221,"nazione":"Svizzera","regione":"","citta":"Andeer","nome":"Camping Andeer","indirizzo":"","lat":null,"lon":null,"costo":"37€","tipologia":"Campeggio","data":"21/08/2018","note":"Prima del piccolo San Bernardo","web":"","mail":"","tel":""},{"id":222,"nazione":"Svizzera","regione":"","citta":"Monte Ceneri","nome":"Area sosta Tamaro","indirizzo":"Monte Ceneri 19 Rivera","lat":null,"lon":null,"costo":"26€","tipologia":"Area Sosta","data":"2019-07-29","note":"Dopo Lugano","web":"","mail":"","tel":""},{"id":223,"nazione":"Danimarca","regione":"","citta":"Hvidbjerg","nome":"Hvidbjerg Strand","indirizzo":"","lat":55.54415,"lon":8.13385,"costo":"65€ tutto compreso","tipologia":"Campeggio","data":"01/08/2015","note":"","web":"","mail":"","tel":""},{"id":224,"nazione":"Danimarca","regione":"","citta":"Harboøre","nome":"Vesterhavs Camping","indirizzo":"","lat":56.62841,"lon":8.15773,"costo":"31€ al giorno","tipologia":"Campeggio","data":"01/08/2015","note":"","web":"","mail":"","tel":""},{"id":225,"nazione":"Danimarca","regione":"","citta":"Grenen - Skagen","nome":"Grenen Strand Camping","indirizzo":"Fyrvej 16","lat":57.73096,"lon":10.61458,"costo":"31€ al giorno","tipologia":"Campeggio","data":"01/08/2015","note":"","web":"","mail":"","tel":""},{"id":226,"nazione":"Danimarca","regione":"","citta":"Sønderborg","nome":"Sønderborg Camping","indirizzo":"Ringgade 7","lat":null,"lon":null,"costo":"32.3€","tipologia":"Campeggio","data":"30/08/2016","note":"Vicino mare","web":"","mail":"","tel":""},{"id":227,"nazione":"Danimarca","regione":"","citta":"Copenhagen","nome":"Camping Bellahøj","indirizzo":"","lat":null,"lon":null,"costo":"33€","tipologia":"Campeggio","data":"31/07/2018","note":"20 min dalla città","web":"","mail":"","tel":""},{"id":228,"nazione":"Svezia","regione":"","citta":"Ystad","nome":"","indirizzo":"","lat":55.42661,"lon":13.8125,"costo":"15€ al giorno","tipologia":"Area Sosta","data":"10/08/2010","note":"Al porto con sauna","web":"","mail":"","tel":""},{"id":229,"nazione":"Svezia","regione":"","citta":"Karlskrona","nome":"Drags camping","indirizzo":"Dragsovägen SE-371 37","lat":56.17325,"lon":15.567567,"costo":"26€ al giorno","tipologia":"Campeggio","data":"11/08/2010","note":"Giro con battello","web":"www.dragsocamping.com","mail":"info@dragso.se","tel":""},{"id":230,"nazione":"Svezia","regione":"","citta":"Kolmården","nome":"First Camping","indirizzo":"SE 618 34","lat":58.6596,"lon":16.400667,"costo":"25€ al giorno","tipologia":"Campeggio","data":"14/08/2010","note":"","web":"","mail":"","tel":""},{"id":231,"nazione":"Svezia","regione":"","citta":"Stoccolma","nome":"","indirizzo":"Skutskepparvagen 2","lat":59.3204,"lon":18.03214,"costo":"23€ al giorno","tipologia":"Area Attrezzata","data":"15/08/2010","note":"Ad agosto piena di italiani","web":"","mail":"","tel":""},{"id":232,"nazione":"Svezia","regione":"","citta":"Örebro","nome":"Gustavsvik Camping","indirizzo":"Sommarvägen SE 702 30","lat":59.255417,"lon":15.189567,"costo":"35€ al giorno","tipologia":"Campeggio","data":"18/08/2010","note":"","web":"www.gustavsvik.se","mail":"camping@gustavsvik.se","tel":""},{"id":233,"nazione":"Svezia","regione":"","citta":"Strömstad","nome":"Strömstads Camping","indirizzo":"Uddevallavägen SE-452 31","lat":58.930533,"lon":11.18005,"costo":"30€ al giorno","tipologia":"Campeggio","data":"19/08/2010","note":"In bicicletta","web":"www.stromstadcamping.se","mail":"","tel":""},{"id":234,"nazione":"Svezia","regione":"","citta":"Lysekil","nome":"Siviks Camping","indirizzo":"PI 170 Sivik SE 453 92","lat":58.2975,"lon":11.44835,"costo":"30€ al giorno","tipologia":"Campeggio","data":"19/08/2010","note":"Sul mare","web":"","mail":"","tel":""},{"id":235,"nazione":"Svezia","regione":"","citta":"Göteborg","nome":"Lisebergsbyn Camping","indirizzo":"Olbersgatan SE 416 55","lat":57.704983,"lon":12.029917,"costo":"37.5€ al giorno","tipologia":"Campeggio","data":"20/08/2010","note":"In bicicletta","web":"www.liseberg.com","mail":"","tel":""},{"id":236,"nazione":"Svezia","regione":"","citta":"Gränna","nome":"","indirizzo":"","lat":58.02,"lon":14.465,"costo":"Gratis","tipologia":"Parcheggio","data":"20/08/2012","note":"Area autostradale","web":"","mail":"","tel":""},{"id":237,"nazione":"Svezia","regione":"","citta":"Ullanger","nome":"","indirizzo":"","lat":62.99779,"lon":18.16976,"costo":"Gratis","tipologia":"Parcheggio","data":"04/08/2012","note":"Laghetto","web":"","mail":"","tel":""},{"id":238,"nazione":"Svezia","regione":"","citta":"Degerhamn","nome":"Bredengs Camping","indirizzo":"","lat":null,"lon":null,"costo":"64.18€","tipologia":"Campeggio","data":"2018-08-02","note":"Isola di Öland","web":"","mail":"","tel":""},{"id":239,"nazione":"Svezia","regione":"","citta":"Docsta","nome":"Skuleberget Havscamping","indirizzo":"","lat":63.06642,"lon":18.36669,"costo":"25€","tipologia":"Area Sosta","data":"2018-08-05","note":"Carico ed elettricità","web":"","mail":"","tel":""},{"id":240,"nazione":"Svezia","regione":"","citta":"Luleå","nome":"","indirizzo":"Resplagargatan","lat":65.58394,"lon":22.1366,"costo":"Gratis","tipologia":"Parcheggio","data":"2018-08-06","note":"No carico e scarico","web":"","mail":"","tel":""},{"id":241,"nazione":"Svezia","regione":"","citta":"Kiruna","nome":"Campeggio Ripan","indirizzo":"","lat":null,"lon":null,"costo":"","tipologia":"Campeggio","data":"2018-08-07","note":"Carico e scarico","web":"","mail":"","tel":""},{"id":242,"nazione":"Norvegia","regione":"","citta":"Oslo","nome":"","indirizzo":"","lat":59.92052,"lon":10.67563,"costo":"18€ al giorno","tipologia":"Area Sosta","data":"15/08/2010","note":"In bicicletta","web":"","mail":"","tel":""},{"id":243,"nazione":"Norvegia","regione":"","citta":"Bergen","nome":"","indirizzo":"","lat":60.37709,"lon":5.32465,"costo":"15€ al giorno","tipologia":"Area Attrezzata","data":"15/08/2012","note":"15 min a piedi","web":"","mail":"","tel":""},{"id":244,"nazione":"Norvegia","regione":"","citta":"Alta","nome":"","indirizzo":"Altavelen 19","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"07/08/2012","note":"Museo incisioni rupestri","web":"","mail":"","tel":""},{"id":245,"nazione":"Norvegia","regione":"","citta":"Capo Nord","nome":"","indirizzo":"","lat":71.16685,"lon":25.778367,"costo":"32€ per 2 notti","tipologia":"Parcheggio","data":"05/08/2012","note":"Usare bagni centro espositivo","web":"","mail":"","tel":""},{"id":246,"nazione":"Norvegia","regione":"","citta":"Botnhamn","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"08/08/2012","note":"Porto con carico acqua","web":"","mail":"","tel":""},{"id":247,"nazione":"Norvegia","regione":"","citta":"Andenes","nome":"","indirizzo":"","lat":69.3203,"lon":16.12502,"costo":"Gratis","tipologia":"Parcheggio","data":"09/08/2012","note":"In barca per balene","web":"","mail":"","tel":""},{"id":248,"nazione":"Norvegia","regione":"","citta":"Andenes","nome":"","indirizzo":"","lat":69.30362,"lon":16.06511,"costo":"5€ carico e scarico","tipologia":"Area Attrezzata","data":"09/08/2012","note":"Sul mare del Nord","web":"","mail":"","tel":""},{"id":249,"nazione":"Norvegia","regione":"","citta":"Kabelvåg","nome":"Camping Sandvika","indirizzo":"","lat":68.20383,"lon":14.42303,"costo":"35€ al giorno","tipologia":"Campeggio","data":"10/08/2012","note":"Vista Lofoten","web":"","mail":"","tel":""},{"id":250,"nazione":"Norvegia","regione":"","citta":"Ålesund","nome":"","indirizzo":"","lat":62.47581,"lon":6.16047,"costo":"22€ al giorno","tipologia":"Area Attrezzata","data":"11/08/2012","note":"Sul mare docce calde","web":"","mail":"","tel":""},{"id":251,"nazione":"Norvegia","regione":"","citta":"Geiranger","nome":"Geiranger Camping","indirizzo":"","lat":62.107117,"lon":7.207133,"costo":"33€ al giorno","tipologia":"Campeggio","data":"13/08/2012","note":"Vista stupenda","web":"www.grande-hytteutleige.no","mail":"","tel":""},{"id":252,"nazione":"Norvegia","regione":"","citta":"Flåm","nome":"Flåm Camping","indirizzo":"","lat":60.863083,"lon":7.116033,"costo":"35€","tipologia":"Campeggio","data":"14/08/2012","note":"Ferrovia più ripida","web":"www.flaam-camping.no","mail":"camping@flaam-camping.no","tel":""},{"id":253,"nazione":"Norvegia","regione":"","citta":"Heia","nome":"","indirizzo":"","lat":59.02614,"lon":5.95035,"costo":"Gratis","tipologia":"Punto Sosta","data":"16/08/2012","note":"Non c'è nulla","web":"","mail":"","tel":""},{"id":254,"nazione":"Norvegia","regione":"","citta":"Flekkefjord","nome":"","indirizzo":"","lat":58.29435,"lon":6.66087,"costo":"","tipologia":"Parcheggio","data":"17/08/2012","note":"Porticciolo","web":"","mail":"","tel":""},{"id":255,"nazione":"Norvegia","regione":"","citta":"Sandefjord","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"23€ al giorno","tipologia":"Area Attrezzata","data":"20/08/2012","note":"Vicino imbarco traghetti","web":"","mail":"","tel":""},{"id":256,"nazione":"Norvegia","regione":"","citta":"Tromsø","nome":"","indirizzo":"","lat":69.64477,"lon":18.94813,"costo":"","tipologia":"Camper Service","data":"19/08/2012","note":"","web":"","mail":"","tel":""},{"id":257,"nazione":"Norvegia","regione":"","citta":"Kabelvåg","nome":"Campeggio Kabelvåg","indirizzo":"","lat":null,"lon":null,"costo":"","tipologia":"Campeggio","data":"2018-08-07","note":"","web":"","mail":"","tel":""},{"id":258,"nazione":"Norvegia","regione":"","citta":"Haukland","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"2018-08-08","note":"Spiaggia","web":"","mail":"","tel":""},{"id":259,"nazione":"Norvegia","regione":"","citta":"Bodø","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"2018-08-09","note":"Distributore Esso porto","web":"","mail":"","tel":""},{"id":260,"nazione":"Norvegia","regione":"","citta":"Laksforsen","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"Gratis","tipologia":"Parcheggio","data":"2018-09-10","note":"Parcheggio cascata","web":"","mail":"","tel":""},{"id":261,"nazione":"Norvegia","regione":"","citta":"Flakk","nome":"Camping Flakk","indirizzo":"","lat":null,"lon":null,"costo":"45.22€","tipologia":"Campeggio","data":"2018-09-11","note":"Vicino porto","web":"","mail":"","tel":""},{"id":262,"nazione":"Norvegia","regione":"","citta":"Åndalsnes","nome":"","indirizzo":"","lat":62.56621,"lon":7.69275,"costo":"","tipologia":"Parcheggio","data":"2018-09-12","note":"No carico e scarico","web":"","mail":"","tel":""},{"id":263,"nazione":"Norvegia","regione":"","citta":"Geirangerfjord","nome":"Camping Geiranger","indirizzo":"","lat":null,"lon":null,"costo":"31.55€","tipologia":"Campeggio","data":"2018-08-14","note":"","web":"","mail":"","tel":""},{"id":264,"nazione":"Norvegia","regione":"","citta":"Bergen","nome":"Parcheggio Bobil","indirizzo":"","lat":59.19256,"lon":5.17811,"costo":"20.9€","tipologia":"Parcheggio","data":"2018-08-16","note":"No scarico vicino tram","web":"","mail":"","tel":""},{"id":265,"nazione":"Norvegia","regione":"","citta":"Skudeneshavn","nome":"Camping Sandhaland","indirizzo":"","lat":null,"lon":null,"costo":"27.34€","tipologia":"Campeggio","data":"2018-08-17","note":"","web":"","mail":"","tel":""},{"id":266,"nazione":"Norvegia","regione":"","citta":"Stavanger","nome":"Camping Mosvagen","indirizzo":"","lat":null,"lon":null,"costo":"30.3€","tipologia":"Campeggio","data":"2018-08-19","note":"","web":"","mail":"","tel":""},{"id":267,"nazione":"Norvegia","regione":"","citta":"Kristiansand","nome":"","indirizzo":"","lat":null,"lon":null,"costo":"8.36€","tipologia":"Parcheggio","data":"2018-08-20","note":"Vicino porto","web":"","mail":"","tel":""},{"id":268,"nazione":"Finlandia","regione":"","citta":"Rovaniemi","nome":"Santa Claus Village","indirizzo":"","lat":66.539883,"lon":25.8505,"costo":"Gratis","tipologia":"Parcheggio","data":"03/08/2012","note":"Villaggio Babbo Natale","web":"","mail":"","tel":""},{"id":269,"nazione":"Islanda","regione":"","citta":"Mývatn","nome":"Campeggio Hlid","indirizzo":"","lat":65.64811,"lon":-16.91276,"costo":"Compreso viaggio","tipologia":"Campeggio","data":"05/08/2016","note":"5.50€ corrente","web":"","mail":"","tel":""},{"id":270,"nazione":"Islanda","regione":"","citta":"Akureyri","nome":"Campeggio Akureyri","indirizzo":"","lat":65.64864,"lon":-18.09797,"costo":"Compreso viaggio","tipologia":"Campeggio","data":"06/08/2016","note":"6.2€ corrente","web":"","mail":"","tel":""},{"id":271,"nazione":"Islanda","regione":"","citta":"Illugastaðir","nome":"Campeggio Illugastadir","indirizzo":"","lat":65.60679,"lon":-20.87838,"costo":"Compreso viaggio","tipologia":"Campeggio","data":"07/08/2016","note":"","web":"","mail":"","tel":""},{"id":272,"nazione":"Islanda","regione":"","citta":"Garðskagi","nome":"Campeggio Garoskagi","indirizzo":"","lat":64.08233,"lon":-22.6908,"costo":"22.50€ con corrente","tipologia":"Campeggio","data":"08/08/2016","note":"Punta penisola","web":"","mail":"","tel":""},{"id":273,"nazione":"Islanda","regione":"","citta":"Eldborg","nome":"Campeggio Eldborg","indirizzo":"","lat":64.81996,"lon":-22.41589,"costo":"22.50€ con corrente","tipologia":"Campeggio","data":"09/08/2016","note":"Con piscina","web":"","mail":"","tel":""},{"id":274,"nazione":"Islanda","regione":"","citta":"Reykjavík","nome":"Campeggio Reykjavik","indirizzo":"","lat":64.1457,"lon":-21.87717,"costo":"Compreso viaggio","tipologia":"Campeggio","data":"10/08/2016","note":"Vicino centro sportivo","web":"","mail":"","tel":""},{"id":275,"nazione":"Islanda","regione":"","citta":"Kirkjubæjarklaustur","nome":"Campeggio Kirkjubaejarklaustur","indirizzo":"","lat":63.79295,"lon":-18.04847,"costo":"Compreso viaggio","tipologia":"Campeggio","data":"15/08/2016","note":"13.5€ corrente","web":"","mail":"","tel":""},{"id":276,"nazione":"Slovenia","regione":"","citta":"Čatež","nome":"Terme di Catez","indirizzo":"Topliška c. 35","lat":null,"lon":null,"costo":"26€ con piscine","tipologia":"Campeggio","data":"20/08/2022","note":"Parco acquatico","web":"https://www.terme-catez.si","mail":"","tel":""},{"id":277,"nazione":"Slovenia","regione":"","citta":"Postumia","nome":"Grotte di Postumia","indirizzo":"Jamska cesta 30","lat":null,"lon":null,"costo":"25€ al giorno","tipologia":"Parcheggio","data":"22/08/2022","note":"Vicino grotte","web":"https://www.postojnska-jama.eu","mail":"","tel":""}];
-var viaggi=JSON.parse(localStorage.getItem("camper_viaggi")||"[]");
-var sosteCustom=JSON.parse(localStorage.getItem("camper_soste_custom")||"[]");
-function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+
+var viaggi=[];
+var sosteCustom=[];
+var fbReady=false;
+var fbRef=null;
+
+// =====================================================
+// FIREBASE
+// =====================================================
+function getSavedFbConfig(){
+  try{return JSON.parse(localStorage.getItem("fb_config")||"null");}catch(e){return null;}
+}
+
+function setSyncBadge(online){
+  var b=document.getElementById("sync-badge");
+  var sb=document.getElementById("sync-status-bar");
+  if(online){
+    b.className="sync-badge sync-ok";b.textContent="⚡ Sincronizzato";
+    if(sb){sb.className="sync-status ok";sb.textContent="✅ Firebase connesso — dati sincronizzati su tutti i dispositivi";}
+  } else {
+    b.className="sync-badge sync-off";b.textContent="⚡ Offline";
+    if(sb){sb.className="sync-status offline";sb.textContent="⚠️ Modalità offline — i dati sono solo su questo dispositivo";}
+  }
+}
+
+function connectFirebase(){
+  var raw=document.getElementById("fb-config-input").value.trim();
+  var cfg=null;
+  try {
+    // accetta sia oggetto puro sia con "firebaseConfig ="
+    var clean=raw.replace(/^\s*(?:var|const|let)?\s*\w+\s*=\s*/,"").replace(/;?\s*$/,"");
+    cfg=JSON.parse(clean);
+  } catch(e) {
+    alert("❌ JSON non valido. Controlla di aver copiato solo il blocco { ... }");return;
+  }
+  if(!cfg.databaseURL){alert("❌ Manca il campo 'databaseURL'. Assicurati di aver abilitato il Realtime Database nel progetto Firebase.");return;}
+  localStorage.setItem("fb_config",JSON.stringify(cfg));
+  initFirebase(cfg);
+}
+
+function disconnectFirebase(){
+  localStorage.removeItem("fb_config");
+  fbReady=false;fbRef=null;
+  setSyncBadge(false);
+  alert("✅ Firebase scollegato. I dati restano su questo dispositivo in localStorage.");
+}
+
+function initFirebase(cfg){
+  try {
+    var app;
+    try{app=firebase.app();}catch(e){app=firebase.initializeApp(cfg);}
+    var db=firebase.database(app);
+    fbRef=db.ref("camper");
+    // Ascolto in tempo reale
+    fbRef.on("value",function(snap){
+      var d=snap.val();
+      if(d){
+        viaggi=d.viaggi||[];
+        sosteCustom=d.sosteCustom||[];
+      }
+      fbReady=true;
+      setSyncBadge(true);
+      renderViagg();
+      updateDiarioSel();
+      renderDB();
+      renderStats();
+    },function(err){
+      console.error(err);
+      setSyncBadge(false);
+      alert("❌ Errore Firebase: "+err.message+"\n\nControlla le regole del database (devono essere in modalità 'test').");
+    });
+  } catch(e){
+    alert("❌ Errore inizializzazione Firebase: "+e.message);
+  }
+}
+
+function fbSave(){
+  if(!fbReady||!fbRef)return;
+  fbRef.set({viaggi:viaggi,sosteCustom:sosteCustom});
+}
+
+// Salvataggio locale di backup
+function localSave(){
+  localStorage.setItem("camper_viaggi",JSON.stringify(viaggi));
+  localStorage.setItem("camper_soste_custom",JSON.stringify(sosteCustom));
+}
+
+function saveData(){localSave();fbSave();}
+
 function getAllSoste(){return SOSTE_DEFAULT.concat(sosteCustom);}
 
+// =====================================================
+// INIT
+// =====================================================
+(function(){
+  // Carica da localStorage come fallback
+  try{viaggi=JSON.parse(localStorage.getItem("camper_viaggi")||"[]");}catch(e){viaggi=[];}
+  try{sosteCustom=JSON.parse(localStorage.getItem("camper_soste_custom")||"[]");}catch(e){sosteCustom=[];}
+  // Prova a connettersi a Firebase se già configurato
+  var cfg=getSavedFbConfig();
+  if(cfg){
+    document.getElementById("fb-config-input").value=JSON.stringify(cfg,null,2);
+    initFirebase(cfg);
+  } else {
+    renderViagg();updateDiarioSel();renderDB();renderStats();
+  }
+})();
+
+// =====================================================
 // TAB
+// =====================================================
 var mapInit=false;
 function showTab(tab){
-  var tabs=["viaggi","diario","mappa","database","export"];
+  var tabs=["viaggi","diario","mappa","database","impostazioni"];
   tabs.forEach(function(t){
     var s=document.getElementById(t+"-section");
-    if(s) s.className="section"+(t===tab?" active":"");
+    if(s){s.className="section"+(t===tab?" active":"");}
+    if(t==="mappa"&&tab==="mappa"&&s){s.className="section active";s.style.padding="0";}
   });
   document.querySelectorAll(".tab-btn").forEach(function(b,i){b.classList.toggle("active",tabs[i]===tab);});
   if(tab==="mappa"&&!mapInit){initMap();mapInit=true;}
   if(tab==="mappa"){setTimeout(function(){if(window.camperMap)window.camperMap.invalidateSize();},100);}
   if(tab==="database")renderDB();
-  if(tab==="export")renderExport();
+  if(tab==="impostazioni")renderStats();
   if(tab==="diario")updateDiarioSel();
 }
 
+// =====================================================
 // MODAL
+// =====================================================
 function openModal(id){document.getElementById(id).classList.add("open");}
 function closeModal(id){document.getElementById(id).classList.remove("open");}
 document.querySelectorAll(".modal-overlay").forEach(function(m){
   m.addEventListener("click",function(e){if(e.target===m)m.classList.remove("open");});
 });
 
+function escH(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+// =====================================================
 // VIAGGI
+// =====================================================
 function renderViagg(){
   var list=document.getElementById("viaggi-list");
-  var nv=document.getElementById("n-viaggi");
-  if(nv)nv.textContent=viaggi.length+" viaggio"+(viaggi.length!==1?"i":"");
+  var nEl=document.getElementById("n-viaggi");
+  if(nEl)nEl.textContent=viaggi.length+" viaggio"+(viaggi.length!==1?"i":"");
   if(!viaggi.length){
-    list.innerHTML='<div class="empty"><span class="emoji">🏕️</span><p>Nessun viaggio ancora.<br>Crea il tuo primo viaggio!</p></div>';
+    list.innerHTML='<div class="empty"><span class="emoji">&#x1F3D5;&#xFE0F;</span><p>Nessun viaggio ancora.<br>Crea il tuo primo viaggio!</p></div>';
     return;
   }
   var html="";
@@ -319,26 +504,25 @@ function renderViagg(){
     var totSpese=v.giorni?v.giorni.reduce(function(s,g){return s+gTotale(g);},0):0;
     var totKm=v.giorni?v.giorni.reduce(function(s,g){return s+(parseFloat(g.km)||0);},0):0;
     var comp=v.giorni?v.giorni.filter(function(g){return g.compilato;}).length:0;
-    html+='<div class="viaggio-item"><div style="display:flex;justify-content:space-between;align-items:center;">'
-         +'<div class="vi-info"><div class="vi-title">📍 '+escH(v.dest)+'</div>'
-         +'<div class="vi-dates">📅 '+v.start+' → '+v.end+'</div>'
-         +'<div class="vi-dates">📖 '+comp+'/'+v.nGiorni+' giorni compilati</div></div>'
-         +'<div class="vi-stats"><div class="stat"><strong>€'+totSpese.toFixed(0)+'</strong>spese totali</div>'
-         +'<div class="stat" style="margin-top:4px;"><strong>'+totKm.toFixed(0)+' km</strong>percorsi</div>'
-         +'<div style="margin-top:8px;display:flex;gap:4px;">'
-         +'<button class="btn btn-secondary btn-sm" onclick="openDiario('+i+')">📖 Diario</button>'
-         +'<button class="btn btn-danger btn-sm" onclick="deleteViaggio('+i+')">🗑️</button>'
-         +'</div></div></div></div>';
+    html+='<div class="viaggio-item">'
+         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;">'
+         +'<div><div class="vi-title">&#x1F4CD; '+escH(v.dest)+'</div>'
+         +'<div class="vi-dates">&#x1F4C5; '+v.start+' &rarr; '+v.end+'</div>'
+         +'<div class="vi-dates">&#x1F4D6; '+comp+'/'+v.nGiorni+' giorni compilati</div></div>'
+         +'<div style="text-align:right;">'
+         +'<div style="font-size:.7rem;color:var(--text2);">spese<strong style="display:block;font-size:.9rem;color:var(--green);">&euro;'+totSpese.toFixed(0)+'</strong></div>'
+         +'<div style="font-size:.7rem;color:var(--text2);margin-top:4px;">km<strong style="display:block;font-size:.9rem;color:var(--green);">'+totKm.toFixed(0)+'</strong></div>'
+         +'</div></div>'
+         +'<div style="display:flex;gap:6px;margin-top:10px;">'
+         +'<button class="btn btn-primary btn-sm" onclick="openDiario('+i+')">&#x1F4D6; Diario</button>'
+         +'<button class="btn btn-danger btn-sm" onclick="deleteViaggio('+i+')">&#x1F5D1;&#xFE0F;</button>'
+         +'</div></div>';
   });
   list.innerHTML=html;
 }
 
-function escH(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-
 function openNewViaggio(){
-  ["v-dest","v-start","v-end","v-km-start","v-km-end","v-note"].forEach(function(id){
-    document.getElementById(id).value="";
-  });
+  ["v-dest","v-start","v-end","v-km-start","v-km-end","v-note"].forEach(function(id){document.getElementById(id).value="";});
   openModal("modal-viaggio");
 }
 
@@ -366,18 +550,14 @@ function saveViaggio(){
     kmStart:document.getElementById("v-km-start").value||0,
     kmEnd:document.getElementById("v-km-end").value||0,
     note:document.getElementById("v-note").value,giorni:giorni});
-  save("camper_viaggi",viaggi);
+  saveData();
   closeModal("modal-viaggio");
-  renderViagg();
-  updateDiarioSel();
+  renderViagg();updateDiarioSel();
 }
 
 function deleteViaggio(i){
   if(!confirm("Eliminare \""+viaggi[i].dest+"\"? Tutti i dati del diario saranno persi."))return;
-  viaggi.splice(i,1);
-  save("camper_viaggi",viaggi);
-  renderViagg();
-  updateDiarioSel();
+  viaggi.splice(i,1);saveData();renderViagg();updateDiarioSel();
 }
 
 function openDiario(i){
@@ -386,14 +566,16 @@ function openDiario(i){
   loadDiario();
 }
 
+// =====================================================
 // DIARIO
+// =====================================================
 function updateDiarioSel(){
   var sel=document.getElementById("diario-viaggio-sel");
   var cur=sel.value;
   var html='<option value="">-- Seleziona un viaggio --</option>';
   viaggi.forEach(function(v,i){html+='<option value="'+i+'">'+escH(v.dest)+' ('+v.start+')</option>';});
   sel.innerHTML=html;
-  if(cur!==""&&cur<viaggi.length)sel.value=cur;
+  if(cur!==""&&parseInt(cur)<viaggi.length)sel.value=cur;
 }
 
 function gTotale(g){
@@ -406,8 +588,7 @@ function loadDiario(){
   var idx=parseInt(document.getElementById("diario-viaggio-sel").value);
   var content=document.getElementById("diario-content");
   if(isNaN(idx)||!viaggi[idx]){
-    content.innerHTML='<div class="empty"><span class="emoji">📖</span><p>Seleziona un viaggio</p></div>';
-    return;
+    content.innerHTML='<div class="empty"><span class="emoji">&#x1F4D6;</span><p>Seleziona un viaggio</p></div>';return;
   }
   var v=viaggi[idx];
   var totSpese=v.giorni.reduce(function(s,g){return s+gTotale(g);},0);
@@ -416,23 +597,23 @@ function loadDiario(){
   var consumo=(totKm>0&&totLitri>0)?(totLitri/totKm*100).toFixed(1):"--";
   var costDay=v.nGiorni>0?(totSpese/v.nGiorni).toFixed(2):"--";
   var html='<div class="totali-bar">'
-          +'<div class="t-title">📍 '+escH(v.dest)+'</div>'
-          +'<div class="t-val">€ '+totSpese.toFixed(2)+'</div>'
+          +'<div class="t-title">&#x1F4CD; '+escH(v.dest)+'</div>'
+          +'<div class="t-val">&euro; '+totSpese.toFixed(2)+'</div>'
           +'<div class="t-grid">'
           +'<div class="t-item"><div class="v">'+totKm.toFixed(0)+'</div><div class="l">km guidati</div></div>'
           +'<div class="t-item"><div class="v">'+consumo+'</div><div class="l">L/100km</div></div>'
-          +'<div class="t-item"><div class="v">€'+costDay+'</div><div class="l">€/giorno</div></div>'
+          +'<div class="t-item"><div class="v">&euro;'+costDay+'</div><div class="l">&euro;/giorno</div></div>'
           +'</div></div>';
   v.giorni.forEach(function(g,gi){
     var tot=gTotale(g);
-    var totStr=tot>0?"€"+tot.toFixed(2):(g.compilato?"✓":"—");
+    var totStr=tot>0?"&euro;"+tot.toFixed(2):(g.compilato?"&#x2713;":"&mdash;");
     html+='<div class="day-item"><div class="day-header" onclick="toggleDay(this)">'
-         +'<div><div class="day-num">Giorno '+g.day+' — '+g.data+'</div>'
-         +(g.tratta?'<div class="day-date">'+escH(g.tratta)+'</div>':"")
-         +(g.sosta_nome?'<div class="day-date">🏕️ '+escH(g.sosta_nome)+'</div>':"")
+         +'<div><div class="day-num">Giorno '+g.day+' &mdash; '+g.data+'</div>'
+         +(g.tratta?'<div style="font-size:.75rem;color:var(--text2);">'+escH(g.tratta)+'</div>':"")
+         +(g.sosta_nome?'<div style="font-size:.75rem;color:var(--text2);">&#x26FA; '+escH(g.sosta_nome)+'</div>':"")
          +'</div><div class="day-tot">'+totStr+'</div></div>'
          +'<div class="day-body">'+renderDaySummary(g)
-         +'<button class="btn btn-primary btn-sm btn-full" onclick="editGiorno('+idx+','+gi+')" style="margin-top:8px;">✏️ Compila / Modifica</button>'
+         +'<button class="btn btn-primary btn-sm btn-full" onclick="editGiorno('+idx+','+gi+')" style="margin-top:8px;">&#x270F;&#xFE0F; Compila / Modifica</button>'
          +'</div></div>';
   });
   content.innerHTML=html;
@@ -441,53 +622,46 @@ function loadDiario(){
 function renderDaySummary(g){
   if(!g.compilato)return'<p style="font-size:.8rem;color:var(--text2);text-align:center;padding:8px;">Giorno non ancora compilato</p>';
   var rows=[];
-  if(g.km)rows.push("🚗 "+g.km+" km guidati"+(g.litri?" · ⛽ "+g.litri+"L":""));
-  if(g.sosta_nome)rows.push("🏕️ "+escH(g.sosta_nome)+(g.sosta_tipo?" ("+g.sosta_tipo+")":"")+" "+(g.sosta_voto||""));
-  if(g.sosta_costo>0)rows.push("💰 Sosta: €"+parseFloat(g.sosta_costo).toFixed(2));
-  if(g.carb>0)rows.push("⛽ Carburante: €"+parseFloat(g.carb).toFixed(2));
-  if(g.auto>0)rows.push("🛣️ Autostrada: €"+parseFloat(g.auto).toFixed(2));
-  if(g.pranzo>0)rows.push("🍽️ Pranzo: €"+parseFloat(g.pranzo).toFixed(2));
-  if(g.cena>0)rows.push("🍷 Cena: €"+parseFloat(g.cena).toFixed(2));
-  if(g.spesa>0)rows.push("🛒 Spesa: €"+parseFloat(g.spesa).toFixed(2));
-  if(g.regali>0)rows.push("🎁 Regali: €"+parseFloat(g.regali).toFixed(2));
-  if(g.varie>0)rows.push("📦 Varie: €"+parseFloat(g.varie).toFixed(2));
-  if(g.note)rows.push("📝 "+escH(g.note.substring(0,120)));
+  if(g.km)rows.push("&#x1F697; "+g.km+" km"+(g.litri?" &bull; &#x26FD; "+g.litri+"L":""));
+  if(g.sosta_nome)rows.push("&#x26FA; "+escH(g.sosta_nome)+(g.sosta_tipo?" ("+g.sosta_tipo+")":"")+" "+(g.sosta_voto||""));
+  if(g.sosta_costo>0)rows.push("&#x1F4B0; Sosta: &euro;"+parseFloat(g.sosta_costo).toFixed(2));
+  if(g.carb>0)rows.push("&#x26FD; Carburante: &euro;"+parseFloat(g.carb).toFixed(2));
+  if(g.auto>0)rows.push("&#x1F6E3;&#xFE0F; Autostrada: &euro;"+parseFloat(g.auto).toFixed(2));
+  if(g.pranzo>0)rows.push("&#x1F37D;&#xFE0F; Pranzo: &euro;"+parseFloat(g.pranzo).toFixed(2));
+  if(g.cena>0)rows.push("&#x1F377; Cena: &euro;"+parseFloat(g.cena).toFixed(2));
+  if(g.spesa>0)rows.push("&#x1F6D2; Spesa: &euro;"+parseFloat(g.spesa).toFixed(2));
+  if(g.regali>0)rows.push("&#x1F381; Regali: &euro;"+parseFloat(g.regali).toFixed(2));
+  if(g.varie>0)rows.push("&#x1F4E6; Varie: &euro;"+parseFloat(g.varie).toFixed(2));
+  if(g.note)rows.push("&#x1F4DD; "+escH(g.note.substring(0,120)));
   return rows.map(function(r){return'<div style="font-size:.78rem;color:var(--text2);padding:2px 0;">'+r+'</div>';}).join("");
 }
 
-function toggleDay(header){
-  var body=header.nextElementSibling;
-  body.classList.toggle("open");
-}
+function toggleDay(h){h.nextElementSibling.classList.toggle("open");}
 
 function editGiorno(vi,gi){
   var g=viaggi[vi].giorni[gi];
   document.getElementById("g-vi").value=vi;
   document.getElementById("g-gi").value=gi;
-  document.getElementById("modal-giorno-title").textContent="Giorno "+g.day+" — "+g.data;
-  var fields={"g-km":"km","g-litri":"litri","g-tratta":"tratta","g-sosta-nome":"sosta_nome",
+  document.getElementById("modal-giorno-title").textContent="Giorno "+g.day+" \u2014 "+g.data;
+  var f={"g-km":"km","g-litri":"litri","g-tratta":"tratta","g-sosta-nome":"sosta_nome",
     "g-sosta-tipo":"sosta_tipo","g-sosta-costo":"sosta_costo","g-sosta-voto":"sosta_voto",
     "g-sosta-gps":"sosta_gps","g-carb":"carb","g-auto":"auto","g-pranzo":"pranzo",
     "g-cena":"cena","g-spesa":"spesa","g-regali":"regali","g-varie":"varie","g-note":"note"};
-  Object.keys(fields).forEach(function(id){
-    document.getElementById(id).value=g[fields[id]]||"";
-  });
-  updateGTot();
-  openModal("modal-giorno");
+  Object.keys(f).forEach(function(id){document.getElementById(id).value=g[f[id]]||"";});
+  updateGTot();openModal("modal-giorno");
 }
 
 function updateGTot(){
-  var ids=["g-sosta-costo","g-carb","g-auto","g-pranzo","g-cena","g-spesa","g-regali","g-varie"];
-  var tot=ids.reduce(function(s,id){return s+(parseFloat(document.getElementById(id).value)||0);},0);
-  document.getElementById("g-tot-display").textContent="€ "+tot.toFixed(2);
+  var tot=["g-sosta-costo","g-carb","g-auto","g-pranzo","g-cena","g-spesa","g-regali","g-varie"]
+    .reduce(function(s,id){return s+(parseFloat(document.getElementById(id).value)||0);},0);
+  document.getElementById("g-tot-display").textContent="\u20AC "+tot.toFixed(2);
 }
 
 function saveGiorno(){
   var vi=parseInt(document.getElementById("g-vi").value);
   var gi=parseInt(document.getElementById("g-gi").value);
   var g=viaggi[vi].giorni[gi];
-  g.km=parseFloat(document.getElementById("g-km").value)||0;
-  g.litri=parseFloat(document.getElementById("g-litri").value)||0;
+  ["km","litri"].forEach(function(k,i){g[k]=parseFloat(document.getElementById(["g-km","g-litri"][i]).value)||0;});
   g.tratta=document.getElementById("g-tratta").value;
   g.sosta_nome=document.getElementById("g-sosta-nome").value;
   g.sosta_tipo=document.getElementById("g-sosta-tipo").value;
@@ -503,185 +677,153 @@ function saveGiorno(){
   g.varie=parseFloat(document.getElementById("g-varie").value)||0;
   g.note=document.getElementById("g-note").value;
   g.compilato=true;
-  save("camper_viaggi",viaggi);
-  closeModal("modal-giorno");
-  loadDiario();
+  saveData();closeModal("modal-giorno");loadDiario();
 }
 
+// =====================================================
 // MAPPA
+// =====================================================
 var allMarkers=[];
-function getIconEmoji(tipo){
-  var t=(tipo||"").toLowerCase();
-  if(t.indexOf("camp")>=0)return "⛺";
-  if(t.indexOf("agri")>=0)return "🌾";
-  if(t.indexOf("attrezzata")>=0)return "🔌";
-  if(t.indexOf("sosta")>=0)return "🅿️";
-  return "🚗";
+function getIconEmoji(t){
+  t=(t||"").toLowerCase();
+  if(t.indexOf("camp")>=0)return"\u26FA";
+  if(t.indexOf("agri")>=0)return"\uD83C\uDF3E";
+  if(t.indexOf("attrezzata")>=0)return"\uD83D\uDD0C";
+  if(t.indexOf("sosta")>=0)return"\uD83C\uDD7F\uFE0F";
+  return"\uD83D\uDE97";
 }
-function getIconColor(tipo){
-  var t=(tipo||"").toLowerCase();
-  if(t.indexOf("camp")>=0)return "#166534";
-  if(t.indexOf("agri")>=0)return "#92400e";
-  if(t.indexOf("attrezzata")>=0)return "#5b21b6";
-  if(t.indexOf("sosta")>=0)return "#1e40af";
-  return "#374151";
+function getIconColor(t){
+  t=(t||"").toLowerCase();
+  if(t.indexOf("camp")>=0)return"#166534";
+  if(t.indexOf("agri")>=0)return"#92400e";
+  if(t.indexOf("attrezzata")>=0)return"#5b21b6";
+  if(t.indexOf("sosta")>=0)return"#1e40af";
+  return"#374151";
 }
 function makeIcon(tipo){
-  var color=getIconColor(tipo),emoji=getIconEmoji(tipo);
-  var div='<div style="background:'+color+';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.3);">'+emoji+'</div>';
-  return L.divIcon({html:div,className:"",iconSize:[28,28],iconAnchor:[14,14]});
+  var c=getIconColor(tipo),e=getIconEmoji(tipo);
+  var d='<div style="background:'+c+';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.3);">'+e+'</div>';
+  return L.divIcon({html:d,className:"",iconSize:[28,28],iconAnchor:[14,14]});
 }
-
 function initMap(){
   var map=L.map("map",{zoomControl:true}).setView([44.5,11.5],5);
   window.camperMap=map;
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-    attribution:"© OpenStreetMap",maxZoom:18
-  }).addTo(map);
-  var soste=getAllSoste();
-  soste.forEach(function(s){
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"\u00A9 OpenStreetMap",maxZoom:18}).addTo(map);
+  getAllSoste().forEach(function(s){
     if(!s.lat||!s.lon)return;
     var m=L.marker([s.lat,s.lon],{icon:makeIcon(s.tipologia)}).addTo(map);
-    var nome=s.nome||s.citta||"Sosta";
-    var popup='<div class="popup-title">'+escH(nome)+'</div>'
-             +'<div class="popup-info">';
-    popup+='📍 '+escH(s.citta)+(s.regione?", "+escH(s.regione):"")+", "+escH(s.nazione)+"<br>";
-    popup+="🏷️ "+(s.tipologia||"");
-    if(s.costo)popup+="<br>💰 "+escH(s.costo);
-    if(s.indirizzo)popup+="<br>🏠 "+escH(s.indirizzo);
-    if(s.note)popup+="<br>📝 "+escH(s.note.substring(0,100));
-    if(s.tel)popup+="<br>📞 "+escH(s.tel);
-    if(s.web)popup+='<br><a href="http://'+escH(s.web.replace(/^https?:\/\//,""))+'" target="_blank">🌐 Sito</a>';
-    popup+='</div>';
-    m.bindPopup(popup,{maxWidth:260});
-    m.sostaData=s;
-    allMarkers.push(m);
+    var pop='<div class="popup-title">'+escH(s.nome||s.citta||"Sosta")+'</div>'
+            +'<div class="popup-info">&#x1F4CD; '+escH(s.citta)+(s.regione?", "+escH(s.regione):"")+", "+escH(s.nazione)+"<br>"
+            +"\uD83C\uDFF7\uFE0F "+(s.tipologia||"");
+    if(s.costo)pop+="<br>\uD83D\uDCB0 "+escH(s.costo);
+    if(s.indirizzo)pop+="<br>\uD83C\uDFE0 "+escH(s.indirizzo);
+    if(s.note)pop+="<br>\uD83D\uDCDD "+escH(s.note.substring(0,100));
+    if(s.tel)pop+="<br>\uD83D\uDCDE "+escH(s.tel);
+    if(s.web)pop+='<br><a href="http://'+escH(s.web.replace(/^https?:\/\//,""))+'" target="_blank">\uD83C\uDF10 Sito</a>';
+    pop+='</div>';
+    m.bindPopup(pop,{maxWidth:260});
+    m.sostaData=s;allMarkers.push(m);
   });
 }
-
 function filterMap(btn,filter){
   document.querySelectorAll(".map-filter").forEach(function(b){b.classList.remove("active");});
   btn.classList.add("active");
-  var map=window.camperMap;
-  if(!map)return;
+  var map=window.camperMap;if(!map)return;
   allMarkers.forEach(function(m){
-    var s=m.sostaData;
-    var show=true;
+    var s=m.sostaData,show=true;
     if(filter==="gratis"){show=s.costo&&s.costo.toLowerCase().indexOf("grat")>=0;}
     else if(filter!=="tutti"){show=s.tipologia&&s.tipologia.toLowerCase().indexOf(filter.toLowerCase())>=0;}
-    if(show)map.addLayer(m); else map.removeLayer(m);
+    if(show)map.addLayer(m);else map.removeLayer(m);
   });
 }
-
 function geolocate(){
-  if(!navigator.geolocation){alert("GPS non disponibile sul tuo browser");return;}
+  if(!navigator.geolocation){alert("GPS non disponibile");return;}
   navigator.geolocation.getCurrentPosition(function(pos){
     var lat=pos.coords.latitude,lon=pos.coords.longitude;
-    var map=window.camperMap;
-    if(!map)return;
+    var map=window.camperMap;if(!map)return;
     map.setView([lat,lon],10);
     L.circle([lat,lon],{radius:30000,color:"#4895ef",fillOpacity:0.1}).addTo(map);
-    var youIcon=L.divIcon({html:'<div style="background:#e76f51;border-radius:50%;width:20px;height:20px;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4);"></div>',className:"",iconSize:[20,20],iconAnchor:[10,10]});
-    L.marker([lat,lon],{icon:youIcon}).addTo(map).bindPopup("📍 Sei qui").openPopup();
+    L.marker([lat,lon],{icon:L.divIcon({html:'<div style="background:#e76f51;border-radius:50%;width:20px;height:20px;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4);"></div>',className:"",iconSize:[20,20],iconAnchor:[10,10]})}).addTo(map).bindPopup("\uD83D\uDCCD Sei qui").openPopup();
   },function(){alert("Impossibile ottenere la posizione GPS");});
 }
 
+// =====================================================
 // DATABASE
+// =====================================================
 var dbFiltroNaz="";
 function setFilter(chip,val){
   document.querySelectorAll(".chip").forEach(function(c){c.classList.remove("active");});
-  chip.classList.add("active");
-  dbFiltroNaz=val;
-  renderDB();
+  chip.classList.add("active");dbFiltroNaz=val;renderDB();
 }
-
 function renderDB(){
   var q=(document.getElementById("db-search").value||"").toLowerCase();
   var all=getAllSoste();
-  var filtrate=all.filter(function(s){
-    var nazOk=!dbFiltroNaz||(dbFiltroNaz==="Altro"
-      ?["Italia","Francia","Germania","Olanda","Norvegia","Svezia"].indexOf(s.nazione)<0
-      :s.nazione===dbFiltroNaz);
-    if(!nazOk)return false;
+  var altre=["Italia","Francia","Germania","Olanda","Norvegia","Svezia"];
+  var filt=all.filter(function(s){
+    var ok=!dbFiltroNaz||(dbFiltroNaz==="Altro"?altre.indexOf(s.nazione)<0:s.nazione===dbFiltroNaz);
+    if(!ok)return false;
     if(!q)return true;
     return ((s.citta||"")+(s.nome||"")+(s.regione||"")+(s.nazione||"")+(s.tipologia||"")+(s.note||"")).toLowerCase().indexOf(q)>=0;
   });
   var nEl=document.getElementById("n-soste");
-  if(nEl)nEl.textContent=filtrate.length+"/"+all.length+" soste";
-  if(!filtrate.length){
-    document.getElementById("db-list").innerHTML='<div class="empty"><span class="emoji">🔍</span><p>Nessuna sosta trovata</p></div>';
-    return;
-  }
+  if(nEl)nEl.textContent=filt.length+"/"+all.length+" soste";
+  if(!filt.length){document.getElementById("db-list").innerHTML='<div class="empty"><span class="emoji">\uD83D\uDD0D</span><p>Nessuna sosta trovata</p></div>';return;}
   var html="";
-  filtrate.slice(0,100).forEach(function(s){
+  filt.slice(0,100).forEach(function(s){
     var nome=s.nome?s.nome:s.citta;
-    var bc=s.tipologia&&s.tipologia.toLowerCase().indexOf("camp")>=0?"badge-camp"
-          :s.tipologia&&s.tipologia.toLowerCase().indexOf("agri")>=0?"badge-agri"
-          :s.tipologia&&s.tipologia.toLowerCase().indexOf("att")>=0?"badge-att"
-          :s.tipologia&&s.tipologia.toLowerCase().indexOf("sosta")>=0?"badge-sosta":"badge-park";
-    var isGratis=s.costo&&s.costo.toLowerCase().indexOf("grat")>=0;
-    html+='<div class="sosta-item"><div class="sosta-header">'
-         +'<div class="sosta-nome">'+escH(nome)+'</div>'
-         +'<span class="badge '+bc+'">'+escH(s.tipologia||"—")+'</span></div>'
-         +'<div class="sosta-luogo">📍 '+escH(s.citta)+(s.regione?", "+escH(s.regione):"")+' · '+escH(s.nazione)+'</div>';
-    if(s.indirizzo)html+='<div class="sosta-luogo">🏠 '+escH(s.indirizzo)+'</div>';
+    var t=(s.tipologia||"").toLowerCase();
+    var bc=t.indexOf("camp")>=0?"badge-camp":t.indexOf("agri")>=0?"badge-agri":t.indexOf("att")>=0?"badge-att":t.indexOf("sosta")>=0?"badge-sosta":"badge-park";
+    var gratis=s.costo&&s.costo.toLowerCase().indexOf("grat")>=0;
+    html+='<div class="sosta-item"><div class="sosta-header"><div class="sosta-nome">'+escH(nome)+'</div>'
+         +'<span class="badge '+bc+'">'+escH(s.tipologia||"&mdash;")+'</span></div>'
+         +'<div class="sosta-luogo">&#x1F4CD; '+escH(s.citta)+(s.regione?", "+escH(s.regione):"")+' &middot; '+escH(s.nazione)+'</div>';
+    if(s.indirizzo)html+='<div class="sosta-luogo">\uD83C\uDFE0 '+escH(s.indirizzo)+'</div>';
     html+='<div class="sosta-info">';
-    if(s.costo)html+='<span>'+( isGratis?"💚":"💰")+' '+escH(s.costo)+'</span>';
-    if(s.tel)html+='<span>📞 '+escH(s.tel)+'</span>';
-    if(s.lat)html+='<span>📡 GPS ✓</span>';
+    if(s.costo)html+='<span>'+(gratis?"&#x1F49A;":"&#x1F4B0;")+" "+escH(s.costo)+'</span>';
+    if(s.tel)html+='<span>\uD83D\uDCDE '+escH(s.tel)+'</span>';
+    if(s.lat)html+='<span>&#x1F4E1; GPS &check;</span>';
     html+='</div>';
-    if(s.note)html+='<div style="font-size:.72rem;color:var(--text2);margin-top:4px;">📝 '+escH(s.note.substring(0,120))+'</div>';
+    if(s.note)html+='<div style="font-size:.72rem;color:var(--text2);margin-top:4px;">\uD83D\uDCDD '+escH(s.note.substring(0,120))+'</div>';
     html+='<div class="sosta-actions">';
-    if(s.web)html+='<a href="http://'+escH(s.web.replace(/^https?:\/\//,""))+'" target="_blank" class="btn btn-secondary btn-sm">🌐 Sito</a>';
-    if(s.lat)html+='<button class="btn btn-secondary btn-sm" onclick="zoomToSosta('+s.lat+','+s.lon+')">🗺️ Mappa</button>';
-    if(s.id>1000)html+='<button class="btn btn-danger btn-sm" onclick="deleteSostaCustom('+s.id+')">🗑️</button>';
+    if(s.web)html+='<a href="http://'+escH(s.web.replace(/^https?:\/\//,""))+'" target="_blank" class="btn btn-secondary btn-sm">\uD83C\uDF10 Sito</a>';
+    if(s.lat)html+='<button class="btn btn-secondary btn-sm" onclick="zoomToSosta('+s.lat+','+s.lon+')">\uD83D\uDDFA&#xFE0F; Mappa</button>';
+    if(s.id>1000)html+='<button class="btn btn-danger btn-sm" onclick="deleteSostaCustom('+s.id+')">\uD83D\uDDD1&#xFE0F;</button>';
     html+='</div></div>';
   });
-  if(filtrate.length>100)html+='<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:10px;">... e altre '+( filtrate.length-100)+' soste. Usa la ricerca per filtrare.</div>';
+  if(filt.length>100)html+='<div style="text-align:center;color:var(--text2);font-size:.8rem;padding:10px;">... e altre '+(filt.length-100)+' soste. Usa la ricerca per filtrare.</div>';
   document.getElementById("db-list").innerHTML=html;
 }
-
 function zoomToSosta(lat,lon){
   showTab("mappa");
-  setTimeout(function(){
-    if(window.camperMap)window.camperMap.setView([lat,lon],14);
-  },200);
+  setTimeout(function(){if(window.camperMap)window.camperMap.setView([lat,lon],14);},200);
 }
-
 function deleteSostaCustom(id){
   if(!confirm("Eliminare questa sosta?"))return;
   sosteCustom=sosteCustom.filter(function(s){return s.id!==id;});
-  save("camper_soste_custom",sosteCustom);
-  renderDB();
+  saveData();renderDB();
 }
-
-// NUOVA SOSTA
 function openNuovaSosta(){
-  ["s-naz","s-reg","s-citta","s-nome","s-indirizzo","s-gps","s-costo","s-web","s-tel","s-note"].forEach(function(id){
-    document.getElementById(id).value="";
-  });
+  ["s-naz","s-reg","s-citta","s-nome","s-indirizzo","s-gps","s-costo","s-web","s-tel","s-note"].forEach(function(id){document.getElementById(id).value="";});
   openModal("modal-sosta");
 }
-
 function getCurrentGPS(){
   if(!navigator.geolocation){alert("GPS non disponibile");return;}
   navigator.geolocation.getCurrentPosition(function(pos){
     document.getElementById("s-gps").value=pos.coords.latitude.toFixed(6)+", "+pos.coords.longitude.toFixed(6);
   },function(){alert("Impossibile ottenere la posizione GPS");});
 }
-
 function saveNuovaSosta(){
   var citta=document.getElementById("s-citta").value.trim();
   var naz=document.getElementById("s-naz").value.trim();
-  if(!citta||!naz){alert("Inserisci almeno nazione e città!");return;}
+  if(!citta||!naz){alert("Inserisci almeno nazione e citt\u00E0!");return;}
   var gpsStr=document.getElementById("s-gps").value.trim();
   var lat=null,lon=null;
   if(gpsStr){
-    var parts=gpsStr.split(",").map(function(x){return parseFloat(x.trim());});
-    if(parts.length>=2&&!isNaN(parts[0])&&!isNaN(parts[1])){lat=parts[0];lon=parts[1];}
+    var pp=gpsStr.split(",").map(function(x){return parseFloat(x.trim());});
+    if(pp.length>=2&&!isNaN(pp[0])&&!isNaN(pp[1])){lat=pp[0];lon=pp[1];}
   }
-  var newId=1001+sosteCustom.length+Date.now()%10000;
-  var ns={id:newId,nazione:naz,regione:document.getElementById("s-reg").value.trim(),
+  var ns={id:1001+sosteCustom.length+Date.now()%10000,nazione:naz,
+    regione:document.getElementById("s-reg").value.trim(),
     citta:citta,nome:document.getElementById("s-nome").value.trim(),
     indirizzo:document.getElementById("s-indirizzo").value.trim(),
     lat:lat,lon:lon,costo:document.getElementById("s-costo").value.trim(),
@@ -691,43 +833,31 @@ function saveNuovaSosta(){
     web:document.getElementById("s-web").value.trim(),mail:"",
     tel:document.getElementById("s-tel").value.trim()};
   sosteCustom.push(ns);
-  save("camper_soste_custom",sosteCustom);
-  closeModal("modal-sosta");
+  saveData();closeModal("modal-sosta");
   if(mapInit&&lat&&lon){
     var m=L.marker([lat,lon],{icon:makeIcon(ns.tipologia)}).addTo(window.camperMap);
-    m.sostaData=ns;
-    m.bindPopup("<b>"+escH(citta)+"</b><br>Nuova sosta aggiunta");
-    allMarkers.push(m);
+    m.sostaData=ns;m.bindPopup("<b>"+escH(citta)+"</b><br>Nuova sosta");allMarkers.push(m);
   }
-  renderDB();
-  alert("✅ Sosta aggiunta al database!");
+  renderDB();alert("\u2705 Sosta aggiunta!");
 }
 
-// EXPORT
-function renderExport(){
+// =====================================================
+// EXPORT / STATS
+// =====================================================
+function renderStats(){
   var all=getAllSoste();
   var totKm=viaggi.reduce(function(s,v){return s+v.giorni.reduce(function(ss,g){return ss+(parseFloat(g.km)||0);},0);},0);
   var totSpese=viaggi.reduce(function(s,v){return s+v.giorni.reduce(function(ss,g){return ss+gTotale(g);},0);},0);
-  var data=[
-    ["🗺️",viaggi.length,"Viaggi"],
-    ["📍",all.length,"Soste nel DB"],
-    ["🚗",totKm.toFixed(0)+" km","Km totali"],
-    ["💶","€"+totSpese.toFixed(0),"Spese totali"]
-  ];
+  var data=[["&#x1F5FA;&#xFE0F;",viaggi.length,"Viaggi"],["&#x1F4CD;",all.length,"Soste nel DB"],
+    ["&#x1F697;",totKm.toFixed(0)+" km","Km totali"],["&#x1F4B6;","&euro;"+totSpese.toFixed(0),"Spese totali"]];
   var html="";
-  data.forEach(function(d){
-    html+='<div class="stat-card"><div style="font-size:1.4rem;">'+d[0]+'</div>'
-         +'<div class="stat-val">'+d[1]+'</div><div class="stat-lbl">'+d[2]+'</div></div>';
-  });
-  document.getElementById("stats-grid").innerHTML=html;
+  data.forEach(function(d){html+='<div class="stat-card"><div style="font-size:1.4rem;">'+d[0]+'</div><div class="stat-val">'+d[1]+'</div><div class="stat-lbl">'+d[2]+'</div></div>';});
+  var el=document.getElementById("stats-grid");if(el)el.innerHTML=html;
 }
-
-function csvEsc(v){return '"'+String(v||"").replace(/"/g,'""')+'"';
-}
-
+function csvEsc(v){var s=String(v||"");return'"'+s.replace(/"/g,'""')+'"';}
 function exportDiari(){
-  var BOM="\uFEFF";
-  var header="Viaggio,Giorno,Data,Tratta,Km,Litri,Sosta,Tipo Sosta,Costo Sosta,Valutazione,Carburante,Autostrada,Pranzo,Cena,Spesa,Regali,Varie,Totale,Note\n";
+  var bom="\uFEFF";
+  var hdr="Viaggio,Giorno,Data,Tratta,Km,Litri,Sosta,Tipo Sosta,Costo Sosta,Valutazione,Carburante,Autostrada,Pranzo,Cena,Spesa,Regali,Varie,Totale,Note\n";
   var rows="";
   viaggi.forEach(function(v){
     v.giorni.forEach(function(g){
@@ -735,58 +865,47 @@ function exportDiari(){
       rows+=[csvEsc(v.dest),g.day,g.data,csvEsc(g.tratta),g.km||0,g.litri||0,
         csvEsc(g.sosta_nome),csvEsc(g.sosta_tipo),g.sosta_costo||0,csvEsc(g.sosta_voto),
         g.carb||0,g.auto||0,g.pranzo||0,g.cena||0,g.spesa||0,g.regali||0,g.varie||0,
-        tot.toFixed(2),csvEsc(g.note)].join(",")+"\n";
+        tot.toFixed(2),csvEsc(g.note)].join(",")+"\\n";
     });
   });
-  downloadFile("diario_camper.csv",BOM+header+rows,"text/csv;charset=utf-8");
+  downloadFile("diario_camper.csv",bom+hdr+rows,"text/csv;charset=utf-8");
 }
-
 function exportDB(){
-  var BOM="\uFEFF";
-  var header="Nazione,Regione,Città,Nome,Indirizzo,Lat,Lon,Costo,Tipologia,Data,Note,Web,Tel\n";
+  var bom="\uFEFF";
+  var hdr="Nazione,Regione,Citt\u00E0,Nome,Indirizzo,Lat,Lon,Costo,Tipologia,Data,Note,Web,Tel\n";
   var rows="";
   getAllSoste().forEach(function(s){
     rows+=[csvEsc(s.nazione),csvEsc(s.regione),csvEsc(s.citta),csvEsc(s.nome),csvEsc(s.indirizzo),
       s.lat||"",s.lon||"",csvEsc(s.costo),csvEsc(s.tipologia),csvEsc(s.data),
-      csvEsc(s.note),csvEsc(s.web),csvEsc(s.tel)].join(",")+"\n";
+      csvEsc(s.note),csvEsc(s.web),csvEsc(s.tel)].join(",")+"\\n";
   });
-  downloadFile("database_soste.csv",BOM+header+rows,"text/csv;charset=utf-8");
+  downloadFile("database_soste.csv",bom+hdr+rows,"text/csv;charset=utf-8");
 }
-
 function backupAll(){
   var data={viaggi:viaggi,sosteCustom:sosteCustom,exportDate:new Date().toISOString()};
   downloadFile("backup_camper_"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(data,null,2),"application/json");
 }
-
 function restoreAll(input){
-  var file=input.files[0];
-  if(!file)return;
+  var file=input.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
     try{
       var data=JSON.parse(e.target.result);
-      if(data.viaggi){viaggi=data.viaggi;save("camper_viaggi",viaggi);}
-      if(data.sosteCustom){sosteCustom=data.sosteCustom;save("camper_soste_custom",sosteCustom);}
-      alert("✅ Ripristino completato!");
-      renderViagg();updateDiarioSel();renderExport();
-    }catch(err){alert("❌ File non valido o corrotto");}
+      if(data.viaggi){viaggi=data.viaggi;}
+      if(data.sosteCustom){sosteCustom=data.sosteCustom;}
+      saveData();
+      alert("\u2705 Ripristino completato!");
+      renderViagg();updateDiarioSel();renderDB();renderStats();
+    }catch(err){alert("\u274C File non valido o corrotto");}
   };
   reader.readAsText(file);
 }
-
 function downloadFile(name,content,mime){
   var a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([content],{type:mime}));
   a.download=name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
-
-// INIT
-renderViagg();
-updateDiarioSel();
-renderExport();
 </script>
 </body>
 </html>
