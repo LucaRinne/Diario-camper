@@ -666,6 +666,7 @@ function renderDB(){
     html+='<div class="sosta-actions">';
     if(s.web)html+='<a href="http://'+escH(s.web.replace(/^https?:\/\//,""))+'" target="_blank" class="btn btn-secondary btn-sm">&#x1F310; Sito</a>';
     if(s.lat)html+='<button class="btn btn-secondary btn-sm" onclick="zoomToSosta('+s.lat+','+s.lon+')">&#x1F5FA;&#xFE0F; Mappa</button>';
+    html+='<button class="btn btn-secondary btn-sm" onclick="openModificaSosta('+s.id+')">&#x270F;&#xFE0F; Modifica</button>';
     if(s.id>1000)html+='<button class="btn btn-danger btn-sm" onclick="deleteSostaCustom('+s.id+')">&#x1F5D1;&#xFE0F;</button>';
     html+='</div></div>';
   });
@@ -703,6 +704,85 @@ function saveNuovaSosta(){
   sosteCustom.push(ns);saveData();closeModal("modal-sosta");
   if(mapInit&&lat&&lon){var m=L.marker([lat,lon],{icon:makeIcon(ns.tipologia)}).addTo(window.camperMap);m.sostaData=ns;m.bindPopup("<b>"+escH(citta)+"</b>");allMarkers.push(m);}
   renderDB();alert("\u2705 Sosta aggiunta!");
+}
+
+
+function openModificaSosta(id){
+  var all=getAllSoste();
+  var s=null;
+  for(var i=0;i<all.length;i++){if(all[i].id===id){s=all[i];break;}}
+  if(!s)return;
+  document.getElementById("ms-id").value=id;
+  document.getElementById("ms-default").value=s.id<=277?"1":"0";
+  document.getElementById("ms-naz").value=s.nazione||"";
+  document.getElementById("ms-reg").value=s.regione||"";
+  document.getElementById("ms-citta").value=s.citta||"";
+  document.getElementById("ms-nome").value=s.nome||"";
+  document.getElementById("ms-indirizzo").value=s.indirizzo||"";
+  document.getElementById("ms-gps").value=(s.lat&&s.lon)?s.lat+", "+s.lon:"";
+  document.getElementById("ms-costo").value=s.costo||"";
+  document.getElementById("ms-tipo").value=s.tipologia||"Campeggio";
+  document.getElementById("ms-web").value=s.web||"";
+  document.getElementById("ms-tel").value=s.tel||"";
+  document.getElementById("ms-note").value=s.note||"";
+  openModal("modal-modifica-sosta");
+}
+
+function saveModificaSosta(){
+  var id=parseInt(document.getElementById("ms-id").value);
+  var isDefault=document.getElementById("ms-default").value==="1";
+  var gps=document.getElementById("ms-gps").value.trim();
+  var lat=null,lon=null;
+  if(gps){var pp=gps.split(",").map(function(x){return parseFloat(x.trim());});if(pp.length>=2&&!isNaN(pp[0])&&!isNaN(pp[1])){lat=pp[0];lon=pp[1];}}
+  var updated={
+    id:id,
+    nazione:document.getElementById("ms-naz").value.trim(),
+    regione:document.getElementById("ms-reg").value.trim(),
+    citta:document.getElementById("ms-citta").value.trim(),
+    nome:document.getElementById("ms-nome").value.trim(),
+    indirizzo:document.getElementById("ms-indirizzo").value.trim(),
+    lat:lat,lon:lon,
+    costo:document.getElementById("ms-costo").value.trim(),
+    tipologia:document.getElementById("ms-tipo").value,
+    note:document.getElementById("ms-note").value.trim(),
+    web:document.getElementById("ms-web").value.trim(),
+    mail:"",
+    tel:document.getElementById("ms-tel").value.trim(),
+    data:new Date().toISOString().slice(0,10)
+  };
+  if(isDefault){
+    // Sosta di default: salva come override in sosteCustom con stesso id
+    var idx=-1;
+    for(var i=0;i<sosteCustom.length;i++){if(sosteCustom[i].id===id){idx=i;break;}}
+    if(idx>=0){sosteCustom[idx]=updated;}else{sosteCustom.push(updated);}
+  } else {
+    // Sosta custom: aggiorna direttamente
+    for(var i=0;i<sosteCustom.length;i++){if(sosteCustom[i].id===id){sosteCustom[i]=updated;break;}}
+  }
+  saveData();
+  // Aggiorna pin su mappa se già inizializzata
+  if(mapInit&&lat&&lon){
+    for(var i=0;i<allMarkers.length;i++){
+      if(allMarkers[i].sostaData&&allMarkers[i].sostaData.id===id){
+        window.camperMap.removeLayer(allMarkers[i]);
+        allMarkers.splice(i,1);break;
+      }
+    }
+    var m=L.marker([lat,lon],{icon:makeIcon(updated.tipologia)}).addTo(window.camperMap);
+    m.sostaData=updated;
+    m.bindPopup("<b>"+escH(updated.nome||updated.citta)+"</b><br>"+escH(updated.tipologia));
+    allMarkers.push(m);
+  }
+  closeModal("modal-modifica-sosta");
+  renderDB();
+  alert("\u2705 Sosta aggiornata!");
+}
+
+function getCurrentGPSModal(){
+  if(!navigator.geolocation){alert("GPS non disponibile");return;}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    document.getElementById("ms-gps").value=pos.coords.latitude.toFixed(6)+", "+pos.coords.longitude.toFixed(6);
+  },function(){alert("Impossibile ottenere la posizione");});
 }
 
 // SETUP/STATS/EXPORT
@@ -756,5 +836,40 @@ function downloadFile(name,content,mime){
   a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 </script>
+
+<!-- MODAL MODIFICA SOSTA -->
+<div class="modal-overlay" id="modal-modifica-sosta">
+  <div class="modal">
+    <div class="modal-title">Modifica Sosta <span class="modal-close" onclick="closeModal('modal-modifica-sosta')">&#x2715;</span></div>
+    <input type="hidden" id="ms-id">
+    <input type="hidden" id="ms-default">
+    <div class="form-row">
+      <div><label>Nazione *</label><input id="ms-naz" type="text"></div>
+      <div><label>Regione</label><input id="ms-reg" type="text"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Citt&#xE0; *</label><input id="ms-citta" type="text"></div>
+      <div><label>Nome</label><input id="ms-nome" type="text"></div>
+    </div>
+    <div class="form-group"><label>Indirizzo</label><input id="ms-indirizzo" type="text"></div>
+    <div class="form-group"><label>GPS (lat, lon)</label><input id="ms-gps" type="text" placeholder="43.7228, 10.9028">
+      <button class="gps-btn" onclick="getCurrentGPSModal()">&#x1F4CD; Usa posizione attuale</button>
+    </div>
+    <div class="form-row">
+      <div><label>Costo</label><input id="ms-costo" type="text"></div>
+      <div><label>Tipo</label>
+        <select id="ms-tipo"><option>Campeggio</option><option>Area Sosta</option><option>Area Attrezzata</option>
+          <option>Parcheggio</option><option>Agriturismo</option><option>Agricampeggio</option>
+          <option>Punto Sosta</option><option>Altro</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Sito Web</label><input id="ms-web" type="text"></div>
+      <div><label>Telefono</label><input id="ms-tel" type="tel"></div>
+    </div>
+    <div class="form-group"><label>Note</label><textarea id="ms-note"></textarea></div>
+    <button class="btn btn-primary btn-full" onclick="saveModificaSosta()" style="margin-top:4px;">&#x2705; Salva Modifiche</button>
+  </div>
+</div>
 </body>
 </html>
